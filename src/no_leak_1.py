@@ -60,7 +60,7 @@ dNdt = supply - (muP * P) - (muS *S)
 
 
 step = 0.01
-ndays = 365
+ndays = 300
 mtimes = np.linspace(0,ndays,int(ndays/step))
 
 #initial values 
@@ -129,8 +129,8 @@ Hs = competition[:,3]
 #####################################
 
 
-fig,ax1 = plt.subplots()
-#fig, (ax1, ax2,ax3) = plt.subplots(1,3)
+#fig,ax1 = plt.subplots()
+fig, (ax1, ax2,ax3) = plt.subplots(1,3)
 fig.suptitle('Growth Competition Projections')
 plt.subplots_adjust(wspace = 0.5, top = 0.85)
 
@@ -140,16 +140,16 @@ ax1.plot(mtimes, Ss , linewidth = 3, color = 'orange', label = 'Syn k1 =' + str(
 ax1.set(xlabel='Time (days)', ylabel='cells per ml')
 #ax1.set_ylim(bottom = -20)
 
-'''
+
 ax2.plot(mtimes, Ns, label = "Nutrient Concentration over time")
 ax2.set(xlabel='Time (days)', ylabel='Nutrient concentration')
 
 ax3.plot(mtimes, Hs, label = "HOOH concentration ")
 ax3.set(xlabel='Time (days)', ylabel='HOOH concentration')
-'''
+
 ax1.semilogy()
-#ax2.semilogy()
-#ax3.semilogy()
+ax2.semilogy()
+ax3.semilogy()
 
 #ax1.legend(loc = 'lower right')
 
