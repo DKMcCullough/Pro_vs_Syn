@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-name:   no_HOOH.py 
+name:   no_leak_calcs.py 
 
 location: /Users/dkm/Documents/Talmy_research/Zinser_lab/Projects/Competitions/Pro_vs_Syn/src
 
 Goal: 
     Compete Pro and Syn on one nutrient N
     Pro to have higher affinity for N (as well as usage perhaps) than Syn
+    Pro dies from HOOH and SYn detoxes only for itselfc
 
 @author: dkm
+
+
+
+
 """
-
-
 
 
 import pandas as pd
@@ -20,6 +23,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import *
 from scipy.integrate import odeint
+
+
 
 
 
@@ -62,51 +67,51 @@ mtimes = np.linspace(0,ndays,int(ndays/step))
 P0 = 1e4
 S0 = 1e4
 N0 = 1.0e4        #nM 
-#P_star0 = 1e4
-#N_star0 = 1e4
-inits = (P0,S0,N0) #P_star0,N_star0)
+H0 = 1500     #nm
+inits = (P0,S0,N0,H0)
 
 #parameters
 
-k1p =  0.000003     #Pro alpha
-k1s =  0.000002      #Syn alpha 
+k1p =  0.00002     #Pro alpha
+k1s =  0.00001      #Syn alpha 
 k2 =  0.88    #Vmax    shared for P and S here
 dp = 0.2   #pro delta
 ds =  0.2   #syn delta
-params = [k1p,k1s,k2,dp,ds]
+kdam = 0.5   #hooh mediated damage rate of Pro 
+deltah = 0.2       #decay rate of HOOH via Syn 
+params = [k1p,k1s,k2,dp,ds,kdam,delta]
 #params = list(zip(k1s,k2s,kdams))
-#muP = (k2 * N /( (k2/k1p) + N) )
-#muS = (k2 * N /( (k2/k1s) + N) )
+Qnp = (9.6e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Pro from Bertillison? 
+Qns = (20.0e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Syn from Bertillison? 
+muP = (k2 * N /( (k2/k1p) + N) )
+muS = (k2 * N /( (k2/k1s) + N) )
 
 
 #empty arrays 
 P = np.array([])
 S  = np.array([])
 N = np.array([])
-#P_star = np.array([])
-#N_star = np.array([])
-y = [P,S,N]    #P_star,N_star]
-muPs = np.array([])
+H = np.array([])
+y = [P,S,N,H]
 
 
 #function set up for ode int
 
 
 def comp(y,t,params):
-    k1p,k1s,k2,dp,ds = params[0], params[1], params[2],params[3],params[4]
-    P,S,N = y[0],y[1],y[2] #,y[3],y[4]
+    k1p,k1s,k2,dp,ds,kdam,deltah = params[0], params[1], params[2],params[3],params[4], params[5],params[6]
+    P,S,N,H = y[0],y[1],y[2],y[3]
     Nsupply = N0
-    Qn = (9.6e-15*(1/(14.0))*1e+9)   #use Qn of Pro for both 
+    S_HOOH = H0
+    Qnp = (9.6e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Pro from Bertillison? 
+    Qns = (20.0e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Syn from Bertillison? 
     muP = (k2 * N /( (k2/k1p) + N) )
     muS = (k2 * N /( (k2/k1s) + N) )
-    dPdt = P * muP - (dp *P)
-    dSdt = S * muS - (ds *S)
-    dNdt = Nsupply - (muP * P * Qn) - (muS * S * Qn)
-    #P_star = Nsupply/muP
-    #N_star = dp/muP
-    np.append(muPs,muP)
-   
-    return [dPdt,dSdt,dNdt] #N_star,P_star]
+    dPdt = P * muP - (dp *P) - kdam*H
+    dSdt = S * muS - (ds *S) 
+    dNdt = Nsupply - (muP * P * Qnp) - (muS * S * Qns)
+    dHdt = S_HOOH - deltah*H
+    return [dPdt,dSdt,dNdt,dHdt]
 
 #solve ODEs via odeint
 competition  = odeint(comp, inits, mtimes, args = (params,))
@@ -115,8 +120,7 @@ competition  = odeint(comp, inits, mtimes, args = (params,))
 Ps = competition[:,0]
 Ss = competition[:,1]
 Ns = competition[:,2]
-#N_stars = competition[:,3]
-#P_stars = competition[:,4]
+Hs = competition[:,3]
 
 
 
@@ -133,8 +137,8 @@ fig.suptitle('Growth Competition Projections')
 plt.subplots_adjust(wspace = 0.3, top = 0.85)
 
 
-ax1.plot(mtimes, Ps , linewidth = 3, color = 'g', label = 'Pro') #label = 'Pro k1 =' + str(k1p))
-ax1.plot(mtimes, Ss , linewidth = 3, color = 'orange', label = 'Syn') #label = 'Syn k1 =' + str(k1s))
+ax1.plot(mtimes, Ps , linewidth = 3, color = 'g', label = 'Pro k1 =' + str(k1p))
+ax1.plot(mtimes, Ss , linewidth = 3, color = 'orange', label = 'Syn k1 =' + str(k1s))
 ax1.set(xlabel='Time (days)', ylabel='cells per ml')
 
 ax2.plot(mtimes, Ns, label = "Nutrient Concentration over time")
@@ -149,48 +153,59 @@ ax1.legend(loc = 'lower right')
 
 
 
+
 ##########################################################
 
 # Calculated analytical solutions at equilibrium
 
 ##########################################################
+
 '''
 # Models
-    muP = (k2 * N /( (k2/k1p) + N) )
-    muS = (k2 * N /( (k2/k1s) + N) )
-    dPdt = P * muP - (dp *P)
-    dSdt = S * muS - (ds *S)
-    dNdt = Nsupply - (muP * P * Qnp) - (muS * S * Qns)   #ignore Qns for equilibrium calculation in matmatica [']]']
+    #muP = (k2 * N /( (k2/k1p) + N) )
+    #muS = (k2 * N /( (k2/k1s) + N) )
+    dPdt = P * muP - (dp *P) - kdam*H 
+    dSdt = S * muS - (ds *S) 
+    dNdt = Nsupply - (muP * P * Qnp) - (muS * S * Qns)-rho*N
+    dHdt = S_HOOH - deltah*H
+    
+    
+#Analytical solutions at equilibrium (dx/dt equations above set to 0 and solved)
 
-#Equilibrium  (2 cases: P wins while S->0, S wins while P->0) 
-    N --> dp/muP
-    P --> Nsupply/muP
-    S --> 0 
+#Equilibrium  (3 cases: both P and S die, P wins while S->0, S wins while P->0))
+    N --> Nsupply/rho
+    P --> 0
+    S --> 0
+    H --> Hsupply/deltah
+    
+    #or
+    
+    N --> (deltah*dp + Hsupply*kdam)/deltah*muP
+    P --> ((deltah*rho*dp)+(Hsupply*rho*kdam)-(Nsupply*deltah*muP))/((deltah*dp*muP) + (Hsupply*kdam*muP))
+    S --> 0
+    H --> Hsupply/deltah
     
     #or
     
     N --> ds/muS
     P --> 0
-    S --> Nsupply/muS 
-    
+    S --> (Nsupply/ds) - (rho/muS)
+    H --> Hsupply/deltah
 '''
 
 
-'''
 
-for P, S, N in zip(Ps, Ss, Ns): 
-    if p-1 < p: # & s-1 > s: 
-        N = dp/muP
-        P = Nsupply/muP
-        S = 0
-    else:
-        N = ds/muP
-        P = 0
-        S = Nsupply/muS
-'''
 
-#ax1.plot(mtimes, N0/muPs , linestyle = ':', color = 'g', label = 'P* projection')
-#ax2.plot(mtimes, N_stars , linestyle = ':', color = 'b', label = 'P* projection')
-# print out dotted P* and N* lines with starting params onto time dependantcompetition projections graph
-#plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
 
