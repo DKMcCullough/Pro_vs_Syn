@@ -128,14 +128,14 @@ Ns = competition[:,2]
 
 
 
-fig, (ax1, ax2) = plt.subplots(1, 2)
-fig.suptitle('Growth Competition Projections')
-plt.subplots_adjust(wspace = 0.3, top = 0.85)
+fig, (ax1, ax2) = plt.subplots(1, 2,figsize=[7,5])
+fig.suptitle('Growth Projections abscent HOOH')
+plt.subplots_adjust(wspace = 0.3, top = 0.9)
 
 
 ax1.plot(mtimes, Ps , linewidth = 3, color = 'g', label = 'Pro') #label = 'Pro k1 =' + str(k1p))
 ax1.plot(mtimes, Ss , linewidth = 3, color = 'orange', label = 'Syn') #label = 'Syn k1 =' + str(k1s))
-ax1.set(xlabel='Time (days)', ylabel='cells per ml')
+ax1.set(xlabel='Time (days)', ylabel='cells  L$^{-1}$')
 
 ax2.plot(mtimes, Ns, label = "Nutrient Concentration over time")
 ax2.set(xlabel='Time (days)', ylabel='Nutrient concentration')
@@ -144,7 +144,7 @@ ax1.semilogy()
 ax2.semilogy()
 
 ax1.legend(loc = 'lower right')
-
+ax1.set_ylim(bottom = 0.1, top =10000000000000)
 #plt.show()
 
 
@@ -193,4 +193,6 @@ for P, S, N in zip(Ps, Ss, Ns):
 #ax2.plot(mtimes, N_stars , linestyle = ':', color = 'b', label = 'P* projection')
 # print out dotted P* and N* lines with starting params onto time dependantcompetition projections graph
 #plt.show()
+
+fig.savefig('../figures/no_hooh_auto',dpi=300)
 

@@ -60,7 +60,7 @@ dNdt = supply - (muP * P) - (muS *S)
 
 
 step = 0.01
-ndays = 800
+ndays = 500
 mtimes = np.linspace(0,ndays,int(ndays/step))
 
 #initial values 
@@ -130,30 +130,30 @@ Hs = competition[:,3]
 
 #####################################
 
-
+fig, (ax1, ax2) = plt.subplots(1, 2,figsize=[7,5])
 #fig,ax1 = plt.subplots()
-fig, (ax1, ax2,ax3) = plt.subplots(1,3,figsize=(9,4.5))
-fig.suptitle('Growth Competition Projections')
-plt.subplots_adjust(wspace = 0.5, top = 0.85,bottom = 0.1)
+#fig, (ax1, ax2,ax3) = plt.subplots(1,3,figsize=[7,5])
+fig.suptitle('Growth Projections with leaky detox')
+plt.subplots_adjust(wspace = 0.5, top = 0.9,bottom = 0.1)
 
 
-ax1.plot(mtimes, Ps , linewidth = 3, color = 'g', label = 'Pro k1 =' + str(k1p))
-ax1.plot(mtimes, Ss , linewidth = 3, color = 'orange', label = 'Syn k1 =' + str(k1s))
-ax1.set(xlabel='Time (days)', ylabel='cells per ml')
+ax1.plot(mtimes, Ps , linewidth = 3, color = 'g', label = 'Pro')#' k1 =' + str(k1p))
+ax1.plot(mtimes, Ss , linewidth = 3, color = 'orange', label = 'Syn')#' k1 =' + str(k1s))
+ax1.set(xlabel='Time (days)', ylabel='cells  L$^{-1}$')
 #ax1.set_ylim(bottom = -20)
-
+ax1.set_ylim(bottom = 100, top =10000000000000)
 
 ax2.plot(mtimes, Ns, label = "Nutrient Concentration over time")
 ax2.set(xlabel='Time (days)', ylabel='Nutrient concentration')
 
-ax3.plot(mtimes, Hs, label = "HOOH concentration ")
-ax3.set(xlabel='Time (days)', ylabel='HOOH concentration')
+#ax3.plot(mtimes, Hs, label = "HOOH concentration ")
+#ax3.set(xlabel='Time (days)', ylabel='HOOH concentration')
 
 ax1.semilogy()
 ax2.semilogy()
-ax3.semilogy()
+#ax3.semilogy()
 
-#ax1.legend(loc = 'lower right')
+ax1.legend(loc = 'lower right')
 
 '''
 pnames = ('k1p','k1s','k2','dp','ds','kdamp','kdams','delta','phi')
@@ -167,6 +167,7 @@ plt.show()
 
 
 
+fig.savefig('../figures/leaky_hooh_auto',dpi=300)
 
 
 
