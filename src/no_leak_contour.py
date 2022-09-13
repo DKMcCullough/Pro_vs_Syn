@@ -1,30 +1,25 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-name:   no_leak_calcs.py 
+name:   no_leak_contour.py 
 
 location: /Users/dkm/Documents/Talmy_research/Zinser_lab/Projects/Competitions/Pro_vs_Syn/src
 
 Goal: 
-    Compete Pro and Syn on one nutrient N
-    Pro to have higher affinity for N (as well as usage perhaps) than Syn
-    Pro dies from HOOH and SYn detoxes only for itselfc
+Compete Pro and Syn on one nutrient N with HOOH only effecting Pro 
+create contour graph to show Hsupply and N supply rates on x and y axis 
+print out color of green (pro wins) or yellow (syn wins) along arrays of H and N supply 
 
 @author: dkm
 
 
-
-
 """
-
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import *
 from scipy.integrate import odeint
-
-
 
 
 
@@ -37,21 +32,6 @@ from scipy.integrate import odeint
 '''
 plankton = (max growth rate)(nutient concentration)/michelis-mention constant) + (nutrinet concentration) (Population size) 
 nutrients = (Supply of nutrient) - (max growth rate)(nutient concentration)/michelis-mention constant) + (nutrinet concentration)
-
-
-k1 (p or s) = alpha (per day rate)
-k2 = vmax (per day rate)
-P = Prochlorococcus abundance (cells/ml)
-S = Synechococcys abundance (cells/ml)
-N = nutrient concetration (nM conentration per ml)
-
-
-muP = (k2 * N /( (k2/k1p) + N) )
-muS = (k2 * N /( (k2/k1s) + N) )
-dPdt = P * muP 
-dSdt = S * muS  
-dNdt = supply - (muP * P) - (muS *S)
-
 
 '''
 #####################
@@ -82,11 +62,6 @@ deltah = 0.2       #decay rate of HOOH via Syn
 rho =  0.002                  #innate N loss from system 
 
 params = [k1p,k1s,k2,dp,ds,kdam,deltah,rho]
-#params = list(zip(k1s,k2s,kdams))
-#Qnp = (9.6e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Pro from Bertillison? 
-#Qns = (20.0e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Syn from Bertillison? 
-#muP = (k2 * N /( (k2/k1p) + N) )
-#muS = (k2 * N /( (k2/k1s) + N) )
 
 
 #empty arrays 
@@ -132,11 +107,6 @@ Hs = competition[:,3]
 
 #####################################
 
-
-
-#fig, (ax1, ax2) = plt.subplots(1, 2)
-#fig.suptitle('Non_leaky  Competition Projections')
-#plt.subplots_adjust(wspace = 0.3, top = 0.85)
 fig1, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True,figsize=(12,7))
 fig1.suptitle('Non_leaky HOOH Growth Projections')
 
@@ -160,13 +130,6 @@ ax1.semilogy()
 ax2.semilogy()
 ax3.semilogy()
 
-#ax1.legend(loc = 'best')
-#ax2.legend(loc = 'best')
-#ax3.legend(loc = 'best')
-#plt.show()
-
-
-
 ##########################################################
 
 # Calculated analytical solutions at equilibrium
@@ -186,31 +149,15 @@ ax3.semilogy()
 #Analytical solutions at equilibrium (dx/dt equations above set to 0 and solved)
 
 #Equilibrium  (3 cases: both P and S die, P wins while S->0, S wins while P->0))
-    N --> 
-    P --> 0
-    S --> 0
-    H --> 
-    
-    #or
-    
-    N --> 
-    P --> 
-    S --> 0
-    H --> 
-    
-    #or
-    
-    N --> -(((deltah*dp)+(Hsupply*kdam))*k2)/((k1p)*(deltah*dp)+(Hsupply*kdam)-(deltah*k2))
-    P --> 0
-    S --> -((k1s)*((Nsupply*k1s)*(ds-k2)+(rho*ds*k2))/((k2)*(ds*k2)+((k1s*k1s)*(-ds + k2))))
-    H --> Hsupply/deltah
+
 '''
 
+#mumaxS or P = Qnp*k2 or Qns*k2 respectively
 
 #Swins
 Qnp = (9.6e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Pro from Bertillison?  #giving N in micro units? 
 Qns = (20.0e-15*(1/(14.0))*1e+9)
-    #[k1p,k1s,k2,dp,ds,kdam,deltah] #k2 is mumax for P and S
+
 Hsupply = H0
 Nsupply = N0
 
@@ -220,21 +167,12 @@ Sstar = -((k1s)*((Nsupply*k1s)*(ds-k2)+(rho*ds*k2))/((k2)*(ds*k2)+((k1s*k1s)*(-d
 
 Hstar = Hsupply/deltah
 
-#mumaxS or P = Qnp*k2 or Qns*k2 respectively
+#graphing equilibrium values 
 
 ax1.axhline(Sstar,color = 'orange', linestyle = "-.",label = 'Sstar')
 ax2.axhline(Nstar,color = 'purple', linestyle = "-.",label = 'Nstar')
 ax3.axhline(Hstar,color = 'red', linestyle = "-.",label = 'Hstar')
 
-'''
-#pwins
-Nstar = -(((deltah*dp)+(Hsupply*kdam))*k2)/((k1p)*(deltah*dp)+(Hsupply*kdam)-(deltah*k2))
-
-
-ax1.axhline(Pstar)
-ax2.axhline(Nstar)
-ax3.axhline(Hstar)
-'''
 
 ax1.legend(loc = 'best')
 ax2.legend(loc = 'best')
@@ -242,7 +180,36 @@ ax3.legend(loc = 'best')
 
 plt.show()
 
-fig1.savefig('../figures/no_leak_calcs_auto',dpi=300)
+fig1.savefig('../figures/no_leak_contour_auto',dpi=300)
+
+
 
 #NSTAR NOT showing up
 #Sstar value off by 10*
+
+##############################
+#Contour 
+##############################
+
+Shs = np.linspace(0, 800, num=50)
+SNs = np.linspace(1000, 100000, num = 50)
+Shs = Shs.astype(int)
+SNs = SNs.astype(int)
+
+Z = np.random.rand(50,50)
+'''
+for (i, SN) in zip(range(len(SNs),SNs)): 
+                   for (j,Sh) in zip(range(len(Shs),Shs)):
+                                     Z[i,j] = Sr*Sh
+
+'''
+
+fig3,(ax1) = plt.subplots(sharex = True, sharey = True, figsize = (8,5))
+
+ax1.pcolor( Z, vmin=np.min(Z), vmax=np.max(Z), cmap = 'summer', shading='auto')
+
+
+
+
+
+
