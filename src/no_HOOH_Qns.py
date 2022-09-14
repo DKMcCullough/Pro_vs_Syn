@@ -95,7 +95,7 @@ def comp(y,t,params):
     k1p,k1s,k2,dp,ds = params[0], params[1], params[2],params[3],params[4]
     P,S,N = y[0],y[1],y[2]
     Nsupply = N0
-    Qnp = (9.6e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Pro from Bertillison? 
+    Qnp = (9.4e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Pro from Bertillison? 
     Qns = (20.0e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Syn from Bertillison? 
     muP = (k2 * N /( (k2/k1p) + N) )
     muS = (k2 * N /( (k2/k1s) + N) )

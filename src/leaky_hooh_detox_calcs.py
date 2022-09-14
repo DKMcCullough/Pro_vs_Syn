@@ -56,7 +56,7 @@ H = HOOH concentration
 
 
 step = 0.01
-ndays = 800
+ndays = 600
 mtimes = np.linspace(0,ndays,int(ndays/step))
 
 #initial values 
@@ -99,16 +99,16 @@ y = [P,S,N,H]
 def comp(y,t,params):
     k1p,k1s,k2,dp,ds,kdam,deltah,phi,rho = params[0], params[1], params[2],params[3],params[4], params[5],params[6], params[7],params[8]
     P,S,N,H = y[0],y[1],y[2],y[3]
-    Qnp = (9.6e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Pro from Bertillison? 
-    Qns = (20.0e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Syn from Bertillison? 
+    Qnp = 1#(9.4e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Pro from Bertillison? 
+    Qns = 1#(20.0e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Syn from Bertillison? 
     muP = (k2 * N /( (k2/k1p) + N) )
     muS = (k2 * N /( (k2/k1s) + N) )
     dPdt = P * muP - (dp *P) - kdam*H*P
     dSdt = S * muS - (ds *S) #- kdams*H*S      
     dNdt =  Nsupply - (muP * P * Qnp) - (muS * S * Qns) - rho*N    
     dHdt = S_HOOH - deltah*H  -phi*S*H  #phi *S*H with phi being Scell-specific detox rate
-    if t<0.05:
-        print(muP,muS)
+    #if t<0.05:
+        #print(muP,muS)
     return [dPdt,dSdt,dNdt,dHdt]
 
 #solve ODEs via odeint
@@ -129,7 +129,7 @@ Hs = competition[:,3]
 
 
 #fig,ax1 = plt.subplots()
-fig, (ax1, ax2,ax3) = plt.subplots(3,1, sharex=True, figsize=(12,7))
+fig, (ax1, ax2,ax3) = plt.subplots(3,1, sharex=True, figsize=(9,5))
 fig.suptitle('Growth Competition Projections')
 plt.subplots_adjust(wspace = 0.5, top = 0.9,bottom = 0.1)
 
@@ -141,10 +141,10 @@ ax1.set(xlabel='Time (days)', ylabel='cells per ml')
 
 
 ax2.plot(mtimes, Ns, linewidth = 3, color = 'purple', label = "Nutrient Concentration over time")
-ax2.set(xlabel='Time (days)', ylabel='Nutrient concentration')
+ax2.set(xlabel='Time (days)', ylabel='Nutrient [ ]')
 
 ax3.plot(mtimes, Hs,  linewidth = 3, color = 'red', label = "HOOH concentration ")
-ax3.set(xlabel='Time (days)', ylabel='HOOH concentration')
+ax3.set(xlabel='Time (days)', ylabel='HOOH [ ]')
 
 ax1.semilogy()
 ax2.semilogy()
@@ -178,23 +178,63 @@ ax3.semilogy()
 #Equilibrium  (5 cases: both die, Syn dies after enough H is gone, coexistance, and Pro dies in 2 different equs due to radical/signs )
 '''
 
-
+###### coesistance equilibrium without Qns 
 
 #mumaxS or P = Qnp*k2 or Qns*k2 respectively
 #rename for matmatica nomenclature issues 
 
 Hsupply = H0
 Nsupply = N0
+ks1 = k2/k1p
+ks2 = k2/k1s
+#d2 = ds
+#d1 = dp
+#P1 = P
+#P2 = S
 
-Nstar = - (ds*k2)/((k1s)*( ds-k2))
+
+###matmatica
+#Nstar = - (ds*k2)/((k1s)*( ds-k2))
+#Hstar = ((k1p*ds*(dp-k2)*k2 + (k1s*dp*k2*(-ds + k2)) / (kdam*((k1s*k2*(ds-k2)-k1p*ds*k2)))))
+#Sstar = -(k1s*(deltah*dp + Hsupply*kdam)*k2*(ds-k2) + k1p*ds*(deltaH*dp + Hsupply*kdam-deltah*k2)*k2) / ((k1s*dp*k2*(ds-k2)+k1p*ds*(-dp+k2)*k2)*phi)
+#Pstar = ((k1p*k2*(ds-k2)-k1p*ds*k2)*(k1p*((ds*ds))*(deltah*dp + Hsupply*kdam-deltah*k2)((k2*k2*k2)) + ((k1s*k1sk1s))*k2*((ds-k2)*(ds-k2))*(Hsupply*kdam*k2 + dp*(deltah*k2 + Nsuppply*phi))-((k1s*k1s))*ds*(ds-k2)*(k2)*(-rho*dp*k2*phi + k1p*(Hsupply*kdam*k2 +dp*(deltah*k2 + Nsupply*phi)-k2*(deltah*k2 + Nsupply*phi))) + k1s*ds*(k2*k2)*(k2*(Hsupply*kdam*k2 + ds*(-Hsupply*kdam + rho*k1p*phi))-dp*(-deltah*k2*k2 + ds*(deltah*k2 + rho*k1p*phi))))) / (k1p*(k1s*k1s)*ds*k2*k2* (-ds+k2) *(k1s*dp*k2*(ds-k2) + k1p*ds*(-dp+k2)*k2)*phi)
 
 
-Pstar = ((k1p*k2*(ds-k2)-k1p*ds*k2)*(k1p*((ds*ds))*(deltah*dp + Hsupply*kdam-deltah*k2)((k2*k2*k2)) + ((k1s*k1sk1s))*k2*((ds-k2)*(ds-k2))*(Hsupply*kdam*k2 + dp*(deltah*k2 + Nsuppply*phi))-((k1s*k1s))*ds*(ds-k2)*(k2)*(-rho*dp*k2*phi + k1p*(Hsupply*kdam*k2 +dp*(deltah*k2 + Nsupply*phi)-k2*(deltah*k2 + Nsupply*phi))) + k1s*ds*(k2*k2)*(k2*(Hsupply*kdam*k2 + ds*(-Hsupply*kdam + rho*k1p*phi))-dp*(-deltah*k2*k2 + ds*(deltah*k2 + rho*k1p*phi))))) / (k1p*(k1s*k1s)*ds*k2*k2* (-ds+k2) *(k1s*dp*k2*(ds-k2) + k1p*ds*(-dp+k2)*k2)*phi)
+###by hand
+Nstar = (ks2*ds)/(k2-ds) 
+Hstar = (((k2*Nstar)/(Nstar + ks1))-(dp))*(1/kdam)
+Sstar = (Hsupply - deltah*Hstar)/(phi*Hstar)
+Pstar = (Nsupply - ((k2*Nstar)/(Nstar - ks2)*Sstar) - (rho*Nstar))*((Nstar + ks1)/(k2*Nstar))
+#Pstar isn't currently meeting up with expected Pro'
+
+'''
+
+###### with QN 
+'''
+#Qn = (9.4e-15*(1/14.0)*1e+9)  #Nitrogen Quota for Pro 
+#9.4*10^-15 g N per cell   #Nitrogen fg quota of Pro cells from Bertillison et al 2003
+#14 g per Mol N     #N g to M converstion from periodic table
+#10^9 ng per g      #conversion from grams to n grams
+'''
+Qnp = (9.4e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Pro from Bertilison 
+Qns = (20.0e-15*(1/(14.0))*1e+9) 
+Hsupply = H0
+Nsupply = N0
+ks1 = k2/k1p
+ks2 = k2/k1s
+
+Nstar = (ks2*ds)/(k2-ds)
+
+Hstar = (((k2*Nstar)/(Nstar + ks1))-(dp))*(1/kdam)
 
 
-Sstar = -(k1s*(deltah*dp + Hsupply*kdam)*k2*(ds-k2) + k1p*ds*(deltaH*dp + Hsupply*kdam-deltah*k2)*k2) / ((k1s*dp*k2*(ds-k2)+k1p*ds*(-dp+k2)*k2)*phi)
+Sstar = (Hsupply - deltah*Hstar)/(phi*Hstar)
 
-Hstar = ((k1p*ds*(dp-k2)*k2 + (k1s*dp*k2*(-ds + k2)) / (kdam*((k1s*k2*(ds-k2)-k1p*ds*k2)))))
+
+Pstar = (Nsupply - ((k2*Nstar)/(Nstar - ks2)*Sstar*Qns) - (rho*Nstar))*((Nstar + ks1)/(k2*Nstar*Qnp))
+
+'''
+
 
 ax1.axhline(Sstar,color = 'orange', linestyle = "-.",label = 'Sstar')
 ax1.axhline(Pstar,color = 'green', linestyle = "-.",label = 'Pstar')
@@ -205,4 +245,4 @@ ax3.axhline(Hstar,color = 'red', linestyle = "-.",label = 'Hstar')
 
 fig.savefig('../figures/leaky_calcs_auto',dpi=300)
 
-
+print('Done')

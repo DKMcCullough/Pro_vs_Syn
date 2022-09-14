@@ -80,7 +80,7 @@ def comp(y,t,params):
     P,S,N,H = y[0],y[1],y[2],y[3]
     Nsupply = N0
     S_HOOH = H0
-    Qnp = (9.6e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Pro from Bertillison? 
+    Qnp = (9.4e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Pro from Bertillison? 
     Qns = (20.0e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Syn from Bertillison? 
     muP = (k2 * N /( (k2/k1p) + N) )
     muS = (k2 * N /( (k2/k1s) + N) )
@@ -155,7 +155,7 @@ ax3.semilogy()
 #mumaxS or P = Qnp*k2 or Qns*k2 respectively
 
 #Swins
-Qnp = (9.6e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Pro from Bertillison?  #giving N in micro units? 
+Qnp = (9.4e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Pro from Bertillison?  #giving N in micro units? 
 Qns = (20.0e-15*(1/(14.0))*1e+9)
 
 Hsupply = H0
