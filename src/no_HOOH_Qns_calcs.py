@@ -130,7 +130,7 @@ fig.suptitle('Growth Competition Projections')
 plt.subplots_adjust(wspace = 0.3, top = 0.85)
 
 
-ax1.plot(mtimes, Ps , linewidth = 3, color = 'g', label = 'Pro') #label = 'Pro k1 =' + str(k1p))
+ax1.plot(mtimes, np.clip(Ps,0.001,10e13) , linewidth = 3, color = 'g', label = 'Pro') #label = 'Pro k1 =' + str(k1p))
 ax1.plot(mtimes, Ss , linewidth = 3, color = 'orange', label = 'Syn') #label = 'Syn k1 =' + str(k1s))
 ax1.set(xlabel='Time (days)', ylabel='cells per ml')
 
@@ -192,6 +192,9 @@ ax2.axhline(Nstar, color = 'purple', linestyle = "-.",label = 'Nstar')
 ax1.legend(loc = 'lower right')
 ax2.legend(loc = 'lower right')
 
+
+#plt.xlim([0, 50])
+plt.ylim([10,10e8])
 
 plt.show()
 
