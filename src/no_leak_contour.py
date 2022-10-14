@@ -31,7 +31,7 @@ from scipy.integrate import odeint
 step = 0.01
 ndays = 360
 mtimes = np.linspace(0,ndays,int(ndays/step))
-Shs = np.linspace(0, 200, num = 10)
+Shs = np.linspace(0, 200, num =10)
 SNs = np.linspace(0, 1000, num = 10)
 Z = np.zeros((int(SNs.shape[0]),int(Shs.shape[0])),int)
 
@@ -51,17 +51,13 @@ Qns = 1#(20.0e-15*(1/(14.0))*1e+9)
 k1p =  0.00002     #Pro alpha
 k1s =  0.00001      #Syn alpha 
 k2 =  0.88    #Vmax    shared for P and S here
+ksp = k2/k1p
+kss = k2/k1s
 dp = 0.2   #pro delta
 ds =  0.2   #syn delta
 kdam = 0.05   #hooh mediated damage rate of Pro 
 deltah = 0.2       #decay rate of HOOH via Syn 
 rho =  0.002                  #innate N loss from system 
-Nsupply = SNs[0]#max(SNs)   #2500
-Hsupply = Shs[1]#max(Shs)
-params = [k1p,k1s,k2,dp,ds,kdam,deltah,rho, Nsupply, Hsupply]
-
-ks1 = k2/k1p
-ks2 = k2/k1s
 
 #empty arrays 
 P = np.array([])
@@ -75,23 +71,47 @@ y = [P,S,N,H]
 
 
 def nleak(y,t,params):
-    k1p,k1s,k2,dp,ds,kdam,deltah,rho,Nsupply,Hsupply = params[0], params[1], params[2],params[3],params[4], params[5],params[6],params[7],params[8],params[9]
+    ksp,kss,k2,dp,ds,kdam,deltah,rho,SN,Sh= params[0], params[1], params[2],params[3],params[4], params[5],params[6],params[7],params[8],params[9]
     P,S,N,H = y[0],y[1],y[2],y[3]
-    dPdt = (k2 * N /( (k2/k1p) + N) )*P*Qnp - (dp *P) - kdam*H*P
-    dSdt = (k2 * N /( (k2/k1s) + N) )*S*Qns - (ds *S) 
-    dNdt = Nsupply - ((k2 * N /( (k2/k1p) + N) )* P * Qnp) - ((k2 * N /( (k2/k1s) + N) ) * S * Qns)-rho*N
-    dHdt = Hsupply - deltah*H
+    dPdt = (k2 * N /( (ksp) + N) )*P*Qnp - (dp *P) - kdam*H*P
+    dSdt = (k2 * N /( (kss) + N) )*S*Qns - (ds *S) 
+    dNdt = SN - ((k2 * N /( (ksp) + N) )* P * Qnp) - ((k2 * N /( (kss) + N) ) * S * Qns)-rho*N
+    dHdt = Sh - deltah*H
     return [dPdt,dSdt,dNdt,dHdt]
-
+'''
 #solve ODEs via odeint
 nonleaky  = odeint(nleak, inits, mtimes, args = (params,))
+'''
+##############################
 
-#redefine where P and N are in returned matrix from ode int
-Ps = nonleaky[:,0]
-Ss = nonleaky[:,1]
-Ns = nonleaky[:,2]
-Hs = nonleaky[:,3]
+#Contour 
 
+##############################
+
+
+for (i,SN) in zip(range(SNs.shape[0]),SNs):
+    for (j,Sh) in zip(range(Shs.shape[0]),Shs):
+        params = [ksp,kss,k2,dp,ds,kdam,deltah,rho, SN, Sh]
+        nonleaky  = odeint(nleak, inits, mtimes, args = (params,))
+        Psc = nonleaky[:,0]
+        Ssc = nonleaky[:,1]
+        Nsc = nonleaky[:,2]
+        Hcs = nonleaky[:,3]
+        if (i == 0) and (j == 3):
+            Hsupply = Shs[j]
+            Nsupply = SNs[i]
+            Ps = nonleaky[:,0]
+            Ss = nonleaky[:,1]
+            Ns = nonleaky[:,2]
+            Hs = nonleaky[:,3]
+        Z[i,j] = Ssc[-1]/(Psc[-1]+Ssc[-1])
+        if Z[i,j] < 0.5:
+            print('SN = '+ str(i),', Sh = ' + str(j))
+            print('Psc[-1] = '+ str(Psc[-1]), ', Ssc[-1] = '+ str(Ssc[-1]))
+        #if ([Psc[g] < Psc[g-1] for g in Psc[:]]) and ([Ssc[h] < Ssc[h-1] for h in Ssc[:]]) : 
+            #Z[i,j] = -1
+        if np.all([g <= 1e-3 for g in Psc[-10:]]) and np.all([h <= 1e-3 for h in Ssc[-10:]]) : 
+            Z[i,j] = -1
 
 
 #####################################
@@ -113,13 +133,12 @@ ax2.set(ylabel='Nutrient per ml')
 
 
 ax3.plot(mtimes, Hs,linewidth = 3, color = 'red', label = "HOOH")
+
 ax3.set(xlabel='Time (days)', ylabel='HOOH per ml')
 
-#np.clip() for graphs that aren't so wiggly one they are in the crazy high or low values
 
 ax1.semilogy()
 ax2.semilogy()
-#ax3.semilogy()
 
 ##########################################################
 
@@ -133,23 +152,9 @@ ax2.semilogy()
 
 ##### S wins #########
 
-
-'''
-######### matmatica solutions  ##############
-Nstar = -(((deltah*dp)+(Hsupply*kdam))*k2)/((k1p)*(deltah*dp)+(Hsupply*kdam)-(deltah*k2))
-
-Sstar = -((k1s)*((Nsupply*k1s)*(ds-k2)+(rho*ds*k2))/((k2)*(ds*k2)+((k1s*k1s)*(-ds + k2))))
-
+Nstar = (ds*kss)/((k2*Qns)-ds)
 Hstar = Hsupply/deltah
-
-'''
-####### by hand solutions #############
-
-Nstar = (ds*ks2)/((k2*Qns)-ds)
-
-Hstar = Hsupply/deltah
-
-Sstar = (Nsupply - rho*Nstar)*(((Nstar + ks2)/(k2*Nstar*Qns)))
+Sstar = (Nsupply - rho*Nstar)*(((Nstar + kss)/(k2*Nstar*Qns)))
 
 '''
 ##### P wins #########
@@ -165,7 +170,8 @@ Pstar = (Nsupply - rho*Nstar)*((Nstar + ks1)/((k2*Nstar)*Qnp))
 
 #        graphing equilibrium values 
 
-########################################
+######################################
+
 ax1.axhline(Sstar,color = 'orange', linestyle = "-.",label = 'Sstar')
 #ax1.axhline(Pstar,color = 'g', linestyle = "-.",label = 'Pstar')
 ax2.axhline(Nstar,color = 'purple', linestyle = "-.",label = 'Nstar')
@@ -183,51 +189,30 @@ fig1.savefig('../figures/no_leak_contour_f1_auto',dpi=300)
 
 
 
-##############################
-
-#Contour 
-
-##############################
-
-
-for (i,SN) in zip(range(SNs.shape[0]),SNs):
-    for (j,Sh) in zip(range(Shs.shape[0]),Shs):
-        params = [k1p,k1s,k2,dp,ds,kdam,deltah,rho, SN, Sh]
-        nonleaky  = odeint(nleak, inits, mtimes, args = (params,))
-        Psc = nonleaky[:,0]
-        Ssc = nonleaky[:,1]
-        Nsc = nonleaky[:,2]
-        Hcs = nonleaky[:,3]
-        if (int(Ssc[-1]) <0) or (int(Psc[-1]) <0) :
-            Z[i,j] = 2
-        if np.all(i <= 0.001 for i in Psc[-10:]): 
-            Psc[-1] =0.0000000000000000001 
-        #if np.all(i <= 0.001 for i in Ss[-10:]) and Ps[-1] >=0.1 :
-            #Ss[-1] = 0.2
-            #Ps[-1] = 0.00000000000000000001
-        print('Ssc = '+ str(Ssc[-1]) + ' and Psc = '+ str(Psc[-1]))
-        Z[i,j] = Ssc[-1]/(Psc[-1]+Ssc[-1])
-        print(Z[i,j])
-
 
 
 fig3,(ax1) = plt.subplots(sharex = True, sharey = True, figsize = (8,5))
 
 
-grid = ax1.pcolormesh( Shs,SNs, np.where(Z == 2, np.nan, Z), vmin=np.min(Z), vmax=np.max(Z), cmap = 'summer', shading='auto')  #'summer_r is reversed color map shading
+grid = ax1.pcolormesh( Shs,SNs, np.where(Z == -1, np.nan, Z), vmin=0, vmax=np.max(Z), cmap = 'summer', shading='auto')  #'summer_r is reversed color map shading
 #np.where(Z == 17, np.nan, Z)
 #is this just masking the values or actually being helpful to cleaner code? 
 
 #grid2 = ax1.pcolormesh( Shs,SNs, np.where(Z == 4, 1, Z), cmap = 'Greys', shading='auto')
+
+ax1.axhline((rho*Nstar),color = 'purple', linestyle = "-.",label = 'SN cutoff for ccell growth?')
+ax1.axvline((deltah*Hstar),color = 'magenta', linestyle = "-.",label = 'H cutoff?')
+
+#ax1.axhline(((rho*Nstar)+(((k2*Nstar)/(Nstar-kss))*Sstar*Qns)),color = 'magenta', linestyle = "-.",label = 'Sn cut off on S?')
 
 
 ax1.set(xlabel='Supply hooh')
 ax1.set(ylabel='Supply nutrient')
 
 fig3.colorbar(grid, cmap= 'summer',label = 'S / (S+P)')
-
+plt.legend()
 
 fig3.savefig('../figures/no_leak_contour_f3_auto',dpi=300)
 
-print('*** contour is flat with if np.all Ss loop ***')
+
 print('*** Done ***')
