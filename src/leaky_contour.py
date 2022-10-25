@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-name:   leaky_hooh_detox_calcs.py 
+name:   leaky_contour.py 
 
 location: /Users/dkm/Documents/Talmy_research/Zinser_lab/Projects/Competitions/Pro_vs_Syn/src
 
@@ -24,7 +24,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import *
 from scipy.integrate import odeint
-
+import sys
 
 ##################################################3
 # parameter and variable Set UP 
@@ -32,11 +32,11 @@ from scipy.integrate import odeint
 
 
 step = 0.01
-ndays = 300
+ndays = 500
 mtimes = np.linspace(0,ndays,int(ndays/step))
-Shs = np.linspace(0, 200, num=10)
-SNs = np.linspace(0, 1000, num = 10)
-Z = np.zeros((int(SNs.shape[0]),int(Shs.shape[0])),int)
+Shs = np.linspace(0, 60, num = 1000)
+SNs = np.linspace(0, 600, num = 1000)
+Z = np.zeros((int(SNs.shape[0]),int(Shs.shape[0])),float)
 
 
 #parameters
@@ -50,12 +50,12 @@ ksp = k2/k1p
 kss = k2/k1s
 dp = 0.2   #pro delta
 ds =  0.2   #syn delta
-kdam = 0.05   #hooh mediated damage rate of Pro  
+kdam = 0.005   #hooh mediated damage rate of Pro  
 deltah = 0.002       #decay rate of HOOH via Syn 
-phi = 0.0002    #0007  #detoxification-based decay of HOOH via Syn in this case
+phi = 0.02    #0007  #detoxification-based decay of HOOH via Syn in this case
 rho =  0.002
 
-params = [ksp,kss,k2,dp,ds,kdam,deltah,phi,rho]
+#params = [ksp,kss,k2,dp,ds,kdam,deltah,phi,rho]
 
 
 
@@ -86,54 +86,42 @@ def leak(y,t,params):
     return [dPdt,dSdt,dNdt,dHdt]
 
 
- ###############################
 
- # ODE models broken down 
-
- ###################################
-
-'''
- plankton = (max growth rate)(nutient concentration)/michelis-mention constant) + (nutrinet concentration) (Population size) 
- nutrients = (Supply of nutrient) - (max growth rate)(nutient concentration)/michelis-mention constant) + (nutrinet concentration)
-
-
- k1 (P or S) = alpha value aka. nutrient uptake rate(per day rate)
- k1 differes between S and P in this model and is used to as drawback for S having catalase detox
- k2 = vmax   aka. usage maximum of nutrient(per day rate)
- P = Prochlorococcus abundance (cells/ml)
- S = Synechococcys abundance (cells/ml)
- N = nutrient concetration (nM conentration per ml)
- H = HOOH concentration 
-
-
-'''
 ##############################
 #Contour and model calculations 
 ##############################
 
-
-
-
 for (i,SN) in zip(range(SNs.shape[0]),SNs):
     for (j,Sh) in zip(range(Shs.shape[0]),Shs):
-        params = [k1p,k1s,k2,dp,ds,kdam,deltah,rho, SN, Sh]
+        params = [ksp,kss,k2,dp,ds,kdam,deltah,phi,rho, SN, Sh]
         leaky  = odeint(leak, inits, mtimes, args = (params,))
         Psc = leaky[:,0]
         Ssc = leaky[:,1]
         Nsc = leaky[:,2]
         Hsc = leaky[:,3]
-        if (i == 8) and (j == 1):
-            #Hsupply = Shs[j]
-            #Nsupply = SNs[i]
+        #print(Z[i,j])
+        if (i == 3) and (j == 1):
             Ps = leaky[:,0]
             Ss = leaky[:,1]
             Ns = leaky[:,2]
             Hs = leaky[:,3]
-        Z[i,j] = Ssc[-1]/(Psc[-1]+Ssc[-1])
-        if np.all([g <= 1e-3 for g in Psc[-10:]]) and np.all([h <= 1e-3 for h in Ssc[-10:]]) : 
+        Ssc_av = np.mean(Ssc[-30:])
+        Psc_av = np.mean(Psc[-30:])
+        #print(Ssc_av, Psc_av)
+        ratio = (Ssc_av/( Ssc_av+ Psc_av))
+        #print(ratio)
+        Z[i,j] = ratio
+        #print(Z[i,j])
+        if np.all([g <= 1e-2 for g in Psc[-100:]]) and np.all([h >= 10 for h in Ssc[-100:]]) : 
+            Z[i,j] = 1
+        if np.all([g >= 10 for g in Psc[-100:]]) and np.all([h <= 1e-2 for h in Ssc[-100:]]) : 
+            Z[i,j] = 0
+        if np.all([g <= 1e-2 for g in Psc[-100:]]) and np.all([h <= 1e-2 for h in Ssc[-100:]]) : 
             Z[i,j] = -1
-        print('Ssc = '+ str(Ssc[-1]) + ' and Psc = '+ str(Psc[-1]))
-        print(Z[i,j])
+        #elif Z[i,j] > 10:
+            #print(i,j)
+            #print(Ssc[-1],Psc[-1])
+            #sys.exit()'''
 
 
 
@@ -228,11 +216,12 @@ ax1.set(ylabel='Supply nutrient')
 #ax1.axvline((deltah*Hstar),color = 'purple', linestyle = "-.",label = 'H cutoff??')
 #ax1.axhline(((rho*Nstar)+(((k2*Nstar)/(Nstar-kss))*Sstar*Qns)),color = 'magenta', linestyle = "-.",label = 'Sn cut off on S?')
 
-plt.legend()
+fig3.legend()
 fig3.colorbar(grid, cmap= 'summer',label = 'S / S+P')
 #plt.colorbar.set_label('S/P+S')
 
 fig3.savefig('../figures/no_leak_contour_f3_auto',dpi=300)
 
-print('*** SStar =/= dsdt solutions ***')
+print('') #printing blank line 
+print('***No coexist???? ***')
 print('*** Done ***')

@@ -28,12 +28,12 @@ from scipy.integrate import odeint
 ######################
 
 
-step = 0.01
-ndays = 360
+step = 0.001
+ndays = 500 
 mtimes = np.linspace(0,ndays,int(ndays/step))
-Shs = np.linspace(0, 200, num =10)
-SNs = np.linspace(0, 1000, num = 10)
-Z = np.zeros((int(SNs.shape[0]),int(Shs.shape[0])),int)
+Shs = np.linspace(0, 100, num = 15)
+SNs = np.linspace(0, 1000, num = 15)
+Z = np.zeros((int(SNs.shape[0]),int(Shs.shape[0])),float)
 
 #initial values 
 P0 = 1e4
@@ -55,7 +55,7 @@ ksp = k2/k1p
 kss = k2/k1s
 dp = 0.2   #pro delta
 ds =  0.2   #syn delta
-kdam = 0.05   #hooh mediated damage rate of Pro 
+kdam = 0.005   #hooh mediated damage rate of Pro 
 deltah = 0.2       #decay rate of HOOH via Syn 
 rho =  0.002                  #innate N loss from system 
 
@@ -97,20 +97,27 @@ for (i,SN) in zip(range(SNs.shape[0]),SNs):
         Ssc = nonleaky[:,1]
         Nsc = nonleaky[:,2]
         Hcs = nonleaky[:,3]
-        if (i == 0) and (j == 3):
-            Hsupply = Shs[j]
-            Nsupply = SNs[i]
+        if (i == 4) and (j == 5):
+            Sh = Shs[j]
+            SN = SNs[i]
             Ps = nonleaky[:,0]
             Ss = nonleaky[:,1]
             Ns = nonleaky[:,2]
             Hs = nonleaky[:,3]
-        Z[i,j] = Ssc[-1]/(Psc[-1]+Ssc[-1])
-        if Z[i,j] < 0.5:
-            print('SN = '+ str(i),', Sh = ' + str(j))
-            print('Psc[-1] = '+ str(Psc[-1]), ', Ssc[-1] = '+ str(Ssc[-1]))
+        Ssc_av = np.mean(Ssc[-10:])
+        Psc_av = np.mean(Psc[-10:])
+        ratio = (Ssc_av/( Ssc_av+ Psc_av))
+        Z[i,j] = ratio
+        #if Z[i,j] < 0.5:
+            #print('SN = '+ str(i),', Sh = ' + str(j))
+            #print('Psc[-1] = '+ str(Psc[-1]), ', Ssc[-1] = '+ str(Ssc[-1]))
         #if ([Psc[g] < Psc[g-1] for g in Psc[:]]) and ([Ssc[h] < Ssc[h-1] for h in Ssc[:]]) : 
             #Z[i,j] = -1
-        if np.all([g <= 1e-3 for g in Psc[-10:]]) and np.all([h <= 1e-3 for h in Ssc[-10:]]) : 
+        if np.all([g <= 1e-3 for g in Psc[-100:]]) and np.all([h >= 10 for h in Ssc[-100:]]) : 
+            Z[i,j] = 1
+        if np.all([g >= 10 for g in Psc[-100:]]) and np.all([h <= 1e-3 for h in Ssc[-100:]]) : 
+            Z[i,j] = 0
+        if np.all([g <= 1e-3 for g in Psc[-100:]]) and np.all([h <= 1e-3 for h in Ssc[-100:]]) : 
             Z[i,j] = -1
 
 
@@ -152,19 +159,21 @@ ax2.semilogy()
 
 ##### S wins #########
 
-Nstar = (ds*kss)/((k2*Qns)-ds)
-Hstar = Hsupply/deltah
-Sstar = (Nsupply - rho*Nstar)*(((Nstar + kss)/(k2*Nstar*Qns)))
+Nstars = (ds*kss)/((k2*Qns)-ds)
 
-'''
+#Hstar = Sh/deltah
+Sstar = (SN - rho*Nstars)*(((Nstars + kss)/(k2*Nstars*Qns)))
+
+
 ##### P wins #########
-Nstar = ((ks1*dp )+(ks1*kdam))/((k2*Qnp) - dp - kdam)
+Nstarp = ((ksp*dp )+(ksp*kdam))/((k2*Qnp) - dp - kdam)
 
-Hstar = Hsupply/deltah
+Hstar = Sh/deltah
 
-Pstar = (Nsupply - rho*Nstar)*((Nstar + ks1)/((k2*Nstar)*Qnp))
-'''
+Pstar = (SN - rho*Nstarp)*((Nstarp + ksp)/((k2*Nstarp)*Qnp))
 
+Nstarph = ((ksp*dp )+(ksp*kdam*Hstar))/((k2*Qnp) - dp - (kdam*Hstar))
+vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2*Nstarp*Pstar*Qnp)+(dp*Pstar)))
 
 ######################################
 
@@ -173,8 +182,9 @@ Pstar = (Nsupply - rho*Nstar)*((Nstar + ks1)/((k2*Nstar)*Qnp))
 ######################################
 
 ax1.axhline(Sstar,color = 'orange', linestyle = "-.",label = 'Sstar')
-#ax1.axhline(Pstar,color = 'g', linestyle = "-.",label = 'Pstar')
-ax2.axhline(Nstar,color = 'purple', linestyle = "-.",label = 'Nstar')
+ax1.axhline(Pstar,color = 'g', linestyle = "-.",label = 'Pstar')
+ax2.axhline(Nstars,color = 'purple', linestyle = "-.",label = 'Nstars')
+ax2.axhline(Nstarp,color = 'magenta', linestyle = "-.",label = 'Nstarp')
 ax3.axhline(Hstar,color = 'red', linestyle = "-.",label = 'Hstar')
 
 
@@ -187,21 +197,19 @@ plt.show()
 
 fig1.savefig('../figures/no_leak_contour_f1_auto',dpi=300)
 
-
-
-
+###############
+#graphing contour
+#####################
 
 fig3,(ax1) = plt.subplots(sharex = True, sharey = True, figsize = (8,5))
 
-
 grid = ax1.pcolormesh( Shs,SNs, np.where(Z == -1, np.nan, Z), vmin=0, vmax=np.max(Z), cmap = 'summer', shading='auto')  #'summer_r is reversed color map shading
 #np.where(Z == 17, np.nan, Z)
-#is this just masking the values or actually being helpful to cleaner code? 
 
-#grid2 = ax1.pcolormesh( Shs,SNs, np.where(Z == 4, 1, Z), cmap = 'Greys', shading='auto')
-
-ax1.axhline((rho*Nstar),color = 'purple', linestyle = "-.",label = 'SN cutoff for ccell growth?')
-ax1.axvline((deltah*Hstar),color = 'magenta', linestyle = "-.",label = 'H cutoff?')
+ax1.axhline((rho*Nstars),color = 'purple', linestyle = "-.",label = 'SN cutoff for S growth?')
+ax1.axhline((rho*Nstarp),color = 'magenta', linestyle = "-.",label = 'SN cutoff for P growth?')
+#ax1.axhline((rho*Nstarph),color = 'orange', linestyle = "-.",label = 'SN cutoff for P+H growth?')
+ax1.axvline((vHline),color = 'c', linestyle = "-.",label = 'H cutoff?')
 
 #ax1.axhline(((rho*Nstar)+(((k2*Nstar)/(Nstar-kss))*Sstar*Qns)),color = 'magenta', linestyle = "-.",label = 'Sn cut off on S?')
 
@@ -214,5 +222,6 @@ plt.legend()
 
 fig3.savefig('../figures/no_leak_contour_f3_auto',dpi=300)
 
-
+print('')
+print('*** Sstar and Hstar on countour ***')
 print('*** Done ***')

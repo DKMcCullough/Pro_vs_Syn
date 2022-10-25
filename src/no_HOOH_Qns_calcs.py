@@ -60,14 +60,31 @@ dNdt = supply - (muP * P) - (muS *S)
 
 
 step = 0.01
-ndays = 200
+ndays = 300
 mtimes = np.linspace(0,ndays,int(ndays/step))
+Shs = np.linspace(0, 200, num =10)
+SNs = np.linspace(0, 1000, num = 10)
+Z = np.zeros((int(SNs.shape[0]),int(Shs.shape[0])),int)
 
 #initial values 
 P0 = 1e4
 S0 = 1e4
 N0 = 1.0e4        #nM 
 inits = (P0,S0,N0)
+
+
+#initial values 
+P0 = 1e4
+S0 = 1e4
+N0 = 1e5        #nM 
+H0 = 1    #nm
+inits = (P0,S0,N0,H0)
+
+
+
+#parameters
+Qnp = 1#(9.4e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Pro from Bertillison?  #giving N in micro units? 
+Qns = 1#(20.0e-15*(1/(14.0))*1e+9)
 
 #parameters
 
@@ -93,7 +110,7 @@ y = [P,S,N]
 #function set up for ode int
 
 
-def comp(y,t,params):
+def noH(y,t,params):
     k1p,k1s,k2,dp,ds,rho = params[0], params[1], params[2],params[3],params[4],params[5]
     P,S,N = y[0],y[1],y[2]
     Nsupply = N0
@@ -108,12 +125,12 @@ def comp(y,t,params):
     return [dPdt,dSdt,dNdt]
 
 #solve ODEs via odeint
-competition  = odeint(comp, inits, mtimes, args = (params,))
+noHooh  = odeint(noH, inits, mtimes, args = (params,))
 
 #redefine where P and  N are in returned matrix from ode int
-Ps = competition[:,0]
-Ss = competition[:,1]
-Ns = competition[:,2]
+Ps = noHooh[:,0]
+Ss = noHooh[:,1]
+Ns = noHooh[:,2]
 
 
 
@@ -201,5 +218,29 @@ plt.show()
 fig.savefig('../figures/no_HOOH_Qns_calcs_auto',dpi=300)
 
 
+for (i,SN) in zip(range(SNs.shape[0]),SNs):
+    for (j,Sh) in zip(range(Shs.shape[0]),Shs):
+        params = [ksp,kss,k2,dp,ds,kdam,deltah,rho, SN, Sh]
+        nonleaky  = odeint(nleak, inits, mtimes, args = (params,))
+        Psc = nonleaky[:,0]
+        Ssc = nonleaky[:,1]
+        Nsc = nonleaky[:,2]
+        Hcs = nonleaky[:,3]
+        if (i == 0) and (j == 3):
+            Hsupply = Shs[j]
+            Nsupply = SNs[i]
+            Ps = nonleaky[:,0]
+            Ss = nonleaky[:,1]
+            Ns = nonleaky[:,2]
+            Hs = nonleaky[:,3]
+            #need to shoose star values here for dynamic print (N, P or S, H)
+        Z[i,j] = Ssc[-1]/(Psc[-1]+Ssc[-1])
+        if Z[i,j] < 0.5:
+            print('SN = '+ str(i),', Sh = ' + str(j))
+            print('Psc[-1] = '+ str(Psc[-1]), ', Ssc[-1] = '+ str(Ssc[-1]))
+        #if ([Psc[g] < Psc[g-1] for g in Psc[:]]) and ([Ssc[h] < Ssc[h-1] for h in Ssc[:]]) : 
+            #Z[i,j] = -1
+        if np.all([g <= 1e-3 for g in Psc[-10:]]) and np.all([h <= 1e-3 for h in Ssc[-10:]]) : 
+            Z[i,j] = -1
 
 
