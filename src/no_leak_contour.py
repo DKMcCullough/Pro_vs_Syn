@@ -29,10 +29,10 @@ from scipy.integrate import odeint
 
 
 step = 0.001
-ndays = 500 
+ndays = 1000 
 mtimes = np.linspace(0,ndays,int(ndays/step))
-Shs = np.linspace(0, 100, num = 15)
-SNs = np.linspace(0, 1000, num = 15)
+Shs = np.linspace(0, 50000, num = 50)
+SNs = np.linspace(0, 50000, num = 50)
 Z = np.zeros((int(SNs.shape[0]),int(Shs.shape[0])),float)
 
 #initial values 
@@ -97,27 +97,22 @@ for (i,SN) in zip(range(SNs.shape[0]),SNs):
         Ssc = nonleaky[:,1]
         Nsc = nonleaky[:,2]
         Hcs = nonleaky[:,3]
-        if (i == 4) and (j == 5):
+        if (i == 5) and (j == 7):
             Sh = Shs[j]
             SN = SNs[i]
             Ps = nonleaky[:,0]
             Ss = nonleaky[:,1]
             Ns = nonleaky[:,2]
             Hs = nonleaky[:,3]
-        Ssc_av = np.mean(Ssc[-10:])
-        Psc_av = np.mean(Psc[-10:])
+        Ssc_av = np.mean(Ssc[-100:])
+        Psc_av = np.mean(Psc[-100:])
         ratio = (Ssc_av/( Ssc_av+ Psc_av))
         Z[i,j] = ratio
-        #if Z[i,j] < 0.5:
-            #print('SN = '+ str(i),', Sh = ' + str(j))
-            #print('Psc[-1] = '+ str(Psc[-1]), ', Ssc[-1] = '+ str(Ssc[-1]))
-        #if ([Psc[g] < Psc[g-1] for g in Psc[:]]) and ([Ssc[h] < Ssc[h-1] for h in Ssc[:]]) : 
-            #Z[i,j] = -1
-        if np.all([g <= 1e-3 for g in Psc[-100:]]) and np.all([h >= 10 for h in Ssc[-100:]]) : 
+        if np.all([g <= 1e-3 for g in Psc[-200:]]) and np.all([h >= 10 for h in Ssc[-200:]]) : 
             Z[i,j] = 1
-        if np.all([g >= 10 for g in Psc[-100:]]) and np.all([h <= 1e-3 for h in Ssc[-100:]]) : 
+        if np.all([g >= 10 for g in Psc[-200:]]) and np.all([h <= 1e-3 for h in Ssc[-200:]]) : 
             Z[i,j] = 0
-        if np.all([g <= 1e-3 for g in Psc[-100:]]) and np.all([h <= 1e-3 for h in Ssc[-100:]]) : 
+        if np.all([g <= 1e-3 for g in Psc[-200:]]) and np.all([h <= 1e-3 for h in Ssc[-200:]]) : 
             Z[i,j] = -1
 
 
@@ -202,7 +197,7 @@ fig1.savefig('../figures/no_leak_contour_f1_auto',dpi=300)
 #####################
 
 fig3,(ax1) = plt.subplots(sharex = True, sharey = True, figsize = (8,5))
-
+fig3.suptitle('Non_leaky Contour')
 grid = ax1.pcolormesh( Shs,SNs, np.where(Z == -1, np.nan, Z), vmin=0, vmax=np.max(Z), cmap = 'summer', shading='auto')  #'summer_r is reversed color map shading
 #np.where(Z == 17, np.nan, Z)
 

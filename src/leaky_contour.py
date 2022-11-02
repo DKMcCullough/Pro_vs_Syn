@@ -31,11 +31,11 @@ import sys
 #############################################
 
 
-step = 0.01
-ndays = 500
+step = 0.001
+ndays = 1000
 mtimes = np.linspace(0,ndays,int(ndays/step))
-Shs = np.linspace(0, 60, num = 1000)
-SNs = np.linspace(0, 600, num = 1000)
+SNs = np.linspace(0, 3000, num = 60)
+Shs = np.linspace(0, 3000, num = 60)
 Z = np.zeros((int(SNs.shape[0]),int(Shs.shape[0])),float)
 
 
@@ -100,23 +100,20 @@ for (i,SN) in zip(range(SNs.shape[0]),SNs):
         Nsc = leaky[:,2]
         Hsc = leaky[:,3]
         #print(Z[i,j])
-        if (i == 3) and (j == 1):
+        if (i == 4) and (j == 7):
             Ps = leaky[:,0]
             Ss = leaky[:,1]
             Ns = leaky[:,2]
             Hs = leaky[:,3]
-        Ssc_av = np.mean(Ssc[-30:])
-        Psc_av = np.mean(Psc[-30:])
-        #print(Ssc_av, Psc_av)
+        Ssc_av = np.mean(Ssc[-200:])
+        Psc_av = np.mean(Psc[-200:])
         ratio = (Ssc_av/( Ssc_av+ Psc_av))
-        #print(ratio)
         Z[i,j] = ratio
-        #print(Z[i,j])
-        if np.all([g <= 1e-2 for g in Psc[-100:]]) and np.all([h >= 10 for h in Ssc[-100:]]) : 
+        if np.all([g <= 1e-3 for g in Psc[-200:]]) and np.all([h >= 10 for h in Ssc[-200:]]) : 
             Z[i,j] = 1
-        if np.all([g >= 10 for g in Psc[-100:]]) and np.all([h <= 1e-2 for h in Ssc[-100:]]) : 
+        if np.all([g >= 10 for g in Psc[-200:]]) and np.all([h <= 1e-3 for h in Ssc[-200:]]) : 
             Z[i,j] = 0
-        if np.all([g <= 1e-2 for g in Psc[-100:]]) and np.all([h <= 1e-2 for h in Ssc[-100:]]) : 
+        if np.all([g <= 1e-3 for g in Psc[-200:]]) and np.all([h <= 1e-3 for h in Ssc[-200:]]) : 
             Z[i,j] = -1
         #elif Z[i,j] > 10:
             #print(i,j)
@@ -170,20 +167,28 @@ ax3.semilogy()
 
 
 ###### coesistance equilibrium (star equations ) ###########
-###### with QN ##################
 
+#Coexist
 Nstar = (kss*ds)/(k2-ds)
-
 Hstar = (((k2*Nstar)/(Nstar + ksp))-(dp))*(1/kdam)
-
-
 Sstar = (Sh - deltah*Hstar)/(phi*Hstar)
+Pstar = ((SN-rho*Nstar)*(Nstar + ksp))/(k2*Nstar*Qnp)
 
 
-Pstar = (SN - (((k2*Nstar)/(Nstar + kss))*Sstar*Qns) - (rho*Nstar))*((Nstar + ksp)/(k2*Nstar*Qnp))
 
-#Pwin stars
-#Swin stars
+#Pwin 
+Nstarp = ((ksp*dp )+(ksp*kdam))/((k2*Qnp) - dp - kdam)
+Pstarp = (SN - rho*Nstarp)*((Nstarp + ksp)/((k2*Nstarp)*Qnp))
+Hstarp = Sh/(deltah+phi*Pstar)  #do we need toassume H must be 0 for P to win?????
+
+#Swin 
+Nstars = (ds*kss)/((k2*Qns)-ds)
+Sstars = (SN - rho*Nstars)*(((Nstars + kss)/(k2*Nstars*Qns)))
+Hstars = Sh/(deltah)
+
+
+Nstarph = ((ksp*dp )+(ksp*kdam*Hstar))/((k2*Qnp) - dp - (kdam*Hstar))
+vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2*Nstarp*Pstar*Qnp)+(dp*Pstar)))
 
 
 
@@ -207,21 +212,25 @@ fig.savefig('../figures/leaky_calcs_auto',dpi=300)
 ######################################
 
 fig3,(ax1) = plt.subplots(sharex = True, sharey = True, figsize = (8,5))
-
+fig3.suptitle('Leaky HOOH Contour')
 
 grid = ax1.pcolormesh( Shs, SNs, np.where(Z == -1, np.nan, Z), vmin=0, vmax=np.max(Z), cmap = 'summer', shading= 'auto'  )  #'gouraud'
-ax1.set(xlabel='Supply hooh')
+ax1.set(xlabel='SupplyHOOH')
 ax1.set(ylabel='Supply nutrient')
 
-#ax1.axvline((deltah*Hstar),color = 'purple', linestyle = "-.",label = 'H cutoff??')
-#ax1.axhline(((rho*Nstar)+(((k2*Nstar)/(Nstar-kss))*Sstar*Qns)),color = 'magenta', linestyle = "-.",label = 'Sn cut off on S?')
+#np.max(Z)
+ax1.axhline((rho*Nstars),color = 'purple', linestyle = "-.",label = 'SN cutoff for S growth?')
+ax1.axhline((rho*Nstarp),color = 'magenta', linestyle = "-.",label = 'SN cutoff for P growth?')
 
-fig3.legend()
+ax1.axvline((vHline),color = 'c', linestyle = "-.",label = 'H cutoff?')
+#ax1.axvline((Hstar*(deltah+(phi*Pstar))),color = 'b', linestyle = "-.",label = 'H cutoff?')
+
+#fig3.legend()
 fig3.colorbar(grid, cmap= 'summer',label = 'S / S+P')
 #plt.colorbar.set_label('S/P+S')
 
 fig3.savefig('../figures/no_leak_contour_f3_auto',dpi=300)
 
 print('') #printing blank line 
-print('***No coexist???? ***')
+print('*** Nstars? or Sh cut off?  ***')
 print('*** Done ***')
