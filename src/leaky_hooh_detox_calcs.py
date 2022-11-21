@@ -34,8 +34,8 @@ from scipy.integrate import odeint
 step = 0.01
 ndays = 300
 mtimes = np.linspace(0,ndays,int(ndays/step))
-Shs = np.linspace(0, 200, num=10)
-SNs = np.linspace(0, 1000, num = 10)
+Shs = np.linspace(0, 200, num=20)
+SNs = np.linspace(0, 1000, num = 20)
 Z = np.zeros((int(SNs.shape[0]),int(Shs.shape[0])),int)
 
 
@@ -50,12 +50,10 @@ ksp = k2/k1p
 kss = k2/k1s
 dp = 0.2   #pro delta
 ds =  0.2   #syn delta
-kdam = 0.05   #hooh mediated damage rate of Pro  
+kdam = 0.005   #hooh mediated damage rate of Pro  
 deltah = 0.002       #decay rate of HOOH via Syn 
-phi = 0.0002    #0007  #detoxification-based decay of HOOH via Syn in this case
+phi = 0.02    #0007  #detoxification-based decay of HOOH via Syn in this case
 rho =  0.002
-
-params = [ksp,kss,k2,dp,ds,kdam,deltah,phi,rho]
 
 
 
@@ -92,21 +90,7 @@ def leak(y,t,params):
 
  ###################################
 
-'''
- plankton = (max growth rate)(nutient concentration)/michelis-mention constant) + (nutrinet concentration) (Population size) 
- nutrients = (Supply of nutrient) - (max growth rate)(nutient concentration)/michelis-mention constant) + (nutrinet concentration)
 
-
- k1 (P or S) = alpha value aka. nutrient uptake rate(per day rate)
- k1 differes between S and P in this model and is used to as drawback for S having catalase detox
- k2 = vmax   aka. usage maximum of nutrient(per day rate)
- P = Prochlorococcus abundance (cells/ml)
- S = Synechococcys abundance (cells/ml)
- N = nutrient concetration (nM conentration per ml)
- H = HOOH concentration 
-
-
-'''
 ##############################
 #Contour and model calculations 
 ##############################
@@ -122,18 +106,23 @@ for (i,SN) in zip(range(SNs.shape[0]),SNs):
         Ssc = leaky[:,1]
         Nsc = leaky[:,2]
         Hsc = leaky[:,3]
-        if (i == 8) and (j == 1):
-            #Hsupply = Shs[j]
-            #Nsupply = SNs[i]
+        if (i == 16) and (j == 0):
+            Sh = Shs[j]
+            SN = SNs[i]
             Ps = leaky[:,0]
             Ss = leaky[:,1]
             Ns = leaky[:,2]
             Hs = leaky[:,3]
-        Z[i,j] = Ssc[-1]/(Psc[-1]+Ssc[-1])
-        if np.all([g <= 1e-3 for g in Psc[-10:]]) and np.all([h <= 1e-3 for h in Ssc[-10:]]) : 
+        Ssc_av = np.mean(Ssc[-200:])
+        Psc_av = np.mean(Psc[-200:])
+        ratio = (Ssc_av/( Ssc_av+ Psc_av))
+        Z[i,j] = ratio
+        if np.all([g <= 1e-3 for g in Psc[-200:]]) and np.all([h >= 10 for h in Ssc[-200:]]) : 
+            Z[i,j] = 1
+        if np.all([g >= 10 for g in Psc[-200:]]) and np.all([h <= 1e-3 for h in Ssc[-200:]]) : 
+            Z[i,j] = 0
+        if np.all([g <= 1e-3 for g in Psc[-200:]]) and np.all([h <= 1e-3 for h in Ssc[-200:]]) : 
             Z[i,j] = -1
-        print('Ssc = '+ str(Ssc[-1]) + ' and Psc = '+ str(Psc[-1]))
-        print(Z[i,j])
 
 
 
@@ -144,31 +133,28 @@ for (i,SN) in zip(range(SNs.shape[0]),SNs):
 #####################################
 
 
+
 #fig,ax1 = plt.subplots()
 fig, (ax1, ax2,ax3) = plt.subplots(3,1, sharex=True, figsize=(9,5))
 fig.suptitle('Growth Competition Projections')
 plt.subplots_adjust(wspace = 0.5, top = 0.9,bottom = 0.1)
 
 
-ax1.plot(mtimes, Ps , linewidth = 3, color = 'g', label = 'Pro ') #'k1 =' + str(k1p))
-ax1.plot(mtimes, Ss , linewidth = 3, color = 'orange', label = 'Syn ') #'k1 =' + str(k1s))
+ax1.plot(mtimes, np.clip(Ps,10,np.max(Ps)) , linewidth = 3, color = 'g', label = 'Pro ') #'k1 =' + str(k1p))
+ax1.plot(mtimes, np.clip(Ss,10,np.max(Ss)) , linewidth = 3, color = 'orange', label = 'Syn ') #'k1 =' + str(k1s))
 ax1.set(xlabel='Time (days)', ylabel='cells per ml')
 #ax1.set_ylim(bottom = -20)
 
 
-ax2.plot(mtimes, Ns, linewidth = 3, color = 'purple', label = "Nutrient Concentration ")
+ax2.plot(mtimes, np.clip(Ns,10,np.max(Ns)), linewidth = 3, color = 'purple', label = "Nutrient Concentration ")
 ax2.set(xlabel='Time (days)', ylabel='Nutrient [ ]')
 
-ax3.plot(mtimes, Hs,  linewidth = 3, color = 'red', label = "HOOH concentration ")
+ax3.plot(mtimes, np.clip(Hs,10,np.max(Hs)),  linewidth = 3, color = 'red', label = "HOOH concentration ")
 ax3.set(xlabel='Time (days)', ylabel='HOOH [ ]')
 
 ax1.semilogy()
 ax2.semilogy()
 ax3.semilogy()
-
-#ax1.legend(loc = 'lower right')
-
-
 
 
 #plt.show()
@@ -183,19 +169,30 @@ ax3.semilogy()
 
 ###### coesistance equilibrium (star equations ) ###########
 ###### with QN ##################
+###### coesistance equilibrium (star equations ) ###########
 
+#Coexist
 Nstar = (kss*ds)/(k2-ds)
-
 Hstar = (((k2*Nstar)/(Nstar + ksp))-(dp))*(1/kdam)
-
-
 Sstar = (Sh - deltah*Hstar)/(phi*Hstar)
+Pstar = ((SN-rho*Nstar)*(Nstar + ksp))/(k2*Nstar*Qnp)
 
 
-Pstar = (SN - (((k2*Nstar)/(Nstar + kss))*Sstar*Qns) - (rho*Nstar))*((Nstar + ksp)/(k2*Nstar*Qnp))
 
-#Pwin stars
-#Swin stars
+#Pwin 
+Nstarp = ((ksp*dp )+(ksp*kdam))/((k2*Qnp) - dp - kdam)
+Pstarp = (SN - rho*Nstarp)*((Nstarp + ksp)/((k2*Nstarp)*Qnp))
+Hstarp = Sh/(deltah+phi*Pstar)  #do we need toassume H must be 0 for P to win?????
+
+#Swin 
+Nstars = (ds*kss)/((k2*Qns)-ds)
+Sstars = (SN - rho*Nstars)*(((Nstars + kss)/(k2*Nstars*Qns)))
+Hstars = Sh/(deltah)
+
+
+Nstarph = ((ksp*dp )+(ksp*kdam*Hstar))/((k2*Qnp) - dp - (kdam*Hstar))
+vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2*Nstarp*Pstar*Qnp)+(dp*Pstar)))
+
 
 
 
@@ -213,7 +210,7 @@ ax3.legend(loc = 'best')
 fig.savefig('../figures/leaky_calcs_auto',dpi=300)
 
 
-
+'''
 #######################################
 # Graphing Cotour plots from 
 ######################################
@@ -233,6 +230,7 @@ fig3.colorbar(grid, cmap= 'summer',label = 'S / S+P')
 #plt.colorbar.set_label('S/P+S')
 
 fig3.savefig('../figures/no_leak_contour_f3_auto',dpi=300)
+'''
 
 print('*** SStar =/= dsdt solutions ***')
 print('*** Done ***')
