@@ -163,10 +163,10 @@ ax2.semilogy()
 
 ######################################
 
-ax1.axhline(Sstar,color = 'brown', linestyle = "-.",label = 'Sstar')
-ax1.axhline(Pstar,color = 'g', linestyle = ":",label = 'Pstar')
-ax2.axhline(Nstars,color = 'purple', linestyle = "-.",label = 'Nstars')
-ax2.axhline(Nstarp,color = 'magenta', linestyle = "-.",label = 'Nstarp')
+ax1.axhline(Sstar,color = 'brown', linestyle = "-.",label = 'S*')
+ax1.axhline(Pstar,color = 'g', linestyle = ":",label = 'P*')
+ax2.axhline(Nstars,color = 'purple', linestyle = "-.",label = 'N*s')
+ax2.axhline(Nstarp,color = 'magenta', linestyle = "-.",label = 'N*p')
 #ax3.axhline(Hstar,color = 'red', linestyle = "-.",label = 'Hstar')
 
 

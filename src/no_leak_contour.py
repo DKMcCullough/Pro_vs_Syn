@@ -29,10 +29,10 @@ from scipy.integrate import odeint
 
 
 step = 0.001
-ndays = 1000 
+ndays = 400 
 mtimes = np.linspace(0,ndays,int(ndays/step))
-Shs = np.linspace(0, 500, num = 10)
-SNs = np.linspace(0, 500, num = 20)
+Shs = np.linspace(0, 1000, num = 10)
+SNs = np.linspace(0, 1000, num = 10)
 Z = np.zeros((int(SNs.shape[0]),int(Shs.shape[0])),float)
 
 #initial values 
@@ -68,13 +68,13 @@ y = [P,S,N,H]
 
 
 #function set up for ode int
-
+#taken QNs and QNp out of S and P ODEs together
 
 def nleak(y,t,params):
     ksp,kss,k2,dp,ds,kdam,deltah,rho,SN,Sh= params[0], params[1], params[2],params[3],params[4], params[5],params[6],params[7],params[8],params[9]
     P,S,N,H = y[0],y[1],y[2],y[3]
-    dPdt = (k2 * N /( (ksp) + N) )*P*Qnp - (dp *P) - kdam*H*P
-    dSdt = (k2 * N /( (kss) + N) )*S*Qns - (ds *S) 
+    dPdt = (k2 * N /( (ksp) + N) )*P - (dp *P) - kdam*H*P
+    dSdt = (k2 * N /( (kss) + N) )*S - (ds *S) 
     dNdt = SN - ((k2 * N /( (ksp) + N) )* P * Qnp) - ((k2 * N /( (kss) + N) ) * S * Qns)-rho*N
     dHdt = Sh - deltah*H
     return [dPdt,dSdt,dNdt,dHdt]
@@ -97,7 +97,7 @@ for (i,SN) in zip(range(SNs.shape[0]),SNs):
         Ssc = nonleaky[:,1]
         Nsc = nonleaky[:,2]
         Hcs = nonleaky[:,3]
-        if (i == 3) and (j == 0):
+        if (i == 7) and (j == 7):
             Sh = Shs[j]
             SN = SNs[i]
             Ps = nonleaky[:,0]
@@ -115,33 +115,7 @@ for (i,SN) in zip(range(SNs.shape[0]),SNs):
         if np.all([g <= 1e-3 for g in Psc[-200:]]) and np.all([h <= 1e-3 for h in Ssc[-200:]]) : 
             Z[i,j] = -1
 
-'''
-#####################################
 
-#  Graphing
-
-#####################################
-
-fig1, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True,figsize=(9,5))
-fig1.suptitle('Non_leaky HOOH')
-
-ax1.plot(mtimes, Ps , linewidth = 3, color = 'g', label = 'Pro')#' k1 =' + str(k1p))
-ax1.plot(mtimes, Ss, linewidth = 3, color = 'orange', label = 'Syn')#' k1 =' + str(k1s))
-ax1.set(ylabel='cells per ml')
-#np.clip(Ss,10,10e10)
-#np.clip(Ps,10,10e10)
-ax2.plot(mtimes, Ns,linewidth = 3, color = 'purple', label = "Nutrient")
-ax2.set(ylabel='Nutrient per ml')
-
-
-ax3.plot(mtimes, Hs,linewidth = 3, color = 'red', label = "HOOH")
-
-ax3.set(xlabel='Time (days)', ylabel='HOOH per ml')
-
-
-ax1.semilogy()
-ax2.semilogy()
-'''
 ##########################################################
 
 # Calculated analytical solutions at equilibrium
@@ -170,17 +144,92 @@ Pstar = (SN - rho*Nstarp)*((Nstarp + ksp)/((k2*Nstarp)*Qnp))
 Nstarph = ((ksp*dp )+(ksp*kdam*Hstar))/((k2*Qnp) - dp - (kdam*Hstar))
 vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2*Nstarp*Pstar*Qnp)+(dp*Pstar)))
 
+
+#graphoinig zoom in 
+fig4,  (ax1,ax2) = plt.subplots(2, 1, sharex=True,figsize=(9,5),dpi = 300)
+fig4.suptitle('Non-leaky dynamics: no HOOH ')
+
+ax1.plot(mtimes, np.clip(Ps,1,np.max(Ps)) , linewidth = 3, color = 'g', label = 'Pro')
+ax1.plot(mtimes, np.clip(Ss,1,np.max(Ss)), linewidth = 3, color = 'orange', label = 'Syn')
+
+ax1.set(ylabel='Cells per ml')
+
+ax2.set_ylabel('Nutrient (per ml)')
+ax2.plot(mtimes, np.clip(Ns,10,np.max(Ns)),linewidth = 3, color = 'purple', label = "Nutrient")
+
+
+#ax3.plot(mtimes, np.clip(Hs,10,np.max(Hs)),linewidth = 3, color = 'red', label = "HOOH")
+
+#ax3.set(xlabel='Time (days)', ylabel='HOOH per ml')
+
+ax1.legend(loc = 'best')
+
+ax1.semilogy()
+ax2.semilogy()
+#ax3.semilogy()
+
+
+
+
 ######################################
 
 #        graphing equilibrium values 
 
 ######################################
 
-ax1.axhline(Sstar,color = 'orange', linestyle = "-.",label = 'Sstar')
-ax1.axhline(Pstar,color = 'g', linestyle = "-.",label = 'Pstar')
-ax2.axhline(Nstars,color = 'purple', linestyle = "-.",label = 'Nstars')
-ax2.axhline(Nstarp,color = 'magenta', linestyle = "-.",label = 'Nstarp')
-ax3.axhline(Hstar,color = 'red', linestyle = "-.",label = 'Hstar')
+ax1.axhline(Sstar,color = 'brown', linestyle = "-.",label = 'S*')
+ax1.axhline(Pstar,color = 'g', linestyle = ":",label = 'P*')
+ax2.axhline(Nstars,color = 'purple', linestyle = "-.",label = 'N*s')
+ax2.axhline(Nstarp,color = 'magenta', linestyle = "-.",label = 'N*p')
+#ax3.axhline(Hstar,color = 'red', linestyle = "-.",label = 'Hstar')
+
+
+ax1.legend(loc = 'lower center')
+ax2.legend(loc = 'lower center')
+#ax3.legend(loc = 'best')
+
+
+
+
+
+'''
+#####################################
+
+#  Graphing
+
+#####################################
+
+fig1, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True,figsize=(9,5),dpi = 300)
+fig1.suptitle('Non_leaky HOOH')
+
+ax1.plot(mtimes, Ps , linewidth = 3, color = 'g', label = 'Pro')#' k1 =' + str(k1p))
+ax1.plot(mtimes, Ss, linewidth = 3, color = 'orange', label = 'Syn')#' k1 =' + str(k1s))
+ax1.set(ylabel='cells per ml')
+#np.clip(Ss,10,10e10)
+#np.clip(Ps,10,10e10)
+ax2.plot(mtimes, Ns,linewidth = 3, color = 'purple', label = "Nutrient")
+ax2.set(ylabel='Nutrient per ml')
+
+
+ax3.plot(mtimes, Hs,linewidth = 3, color = 'red', label = "HOOH")
+
+ax3.set(xlabel='Time (days)', ylabel='HOOH per ml')
+
+
+ax1.semilogy()
+ax2.semilogy()
+
+######################################
+
+#        graphing equilibrium values 
+
+######################################
+
+ax1.axhline(Sstar,color = 'orange', linestyle = "-.",label = 'S*')
+ax1.axhline(Pstar,color = 'g', linestyle = "-.",label = 'P*')
+ax2.axhline(Nstars,color = 'purple', linestyle = "-.",label = 'N*s')
+ax2.axhline(Nstarp,color = 'magenta', linestyle = "-.",label = 'N*p')
+ax3.axhline(Hstar,color = 'red', linestyle = "-.",label = 'H*')
 
 
 ax1.legend(loc = 'best')
@@ -191,12 +240,12 @@ fig1.tight_layout()
 plt.show()
 
 fig1.savefig('../figures/no_leak_contour_f1_auto',dpi=300)
-'''
+
 ###############
 #graphing contour
 #####################
 
-fig3,(ax1) = plt.subplots(sharex = True, sharey = True, figsize = (8,5))
+fig3,(ax1) = plt.subplots(sharex = True, sharey = True, figsize = (8,5),dpi = 300)
 fig3.suptitle('Non_leaky Contour')
 grid = ax1.pcolormesh( Shs,SNs, np.where(Z == -1, np.nan, Z), vmin=0, vmax=np.max(Z), cmap = 'summer', shading='auto')  #'summer_r is reversed color map shading
 #np.where(Z == 17, np.nan, Z)
@@ -218,43 +267,6 @@ plt.legend()
 fig3.savefig('../figures/no_leak_contour_f3_auto',dpi=300)
 
 '''
-
-
-fig4,  (ax1,ax2) = plt.subplots(2, 1, sharey=True,figsize=(9,5))
-fig4.suptitle('Zoom in ')
-
-# zoom-in / limit the view to different portions of the data
-
-
-
-ax1.plot(mtimes, np.clip(Ps,10,np.max(Ps)) , linewidth = 3, color = 'g', label = 'Pro')
-ax1.plot(mtimes, np.clip(Ss,10,np.max(Ss)), linewidth = 3, color = 'orange', label = 'Syn')
-
-
-
-
-ax1.set(ylabel='cells per ml')
-
-
-
-ax2.set_ylabel('Nutrient (per ml)')
-ax2.plot(mtimes, np.clip(Ns,10,np.max(Ns)),linewidth = 3, color = 'purple', label = "Nutrient")
-
-
-#ax3.plot(mtimes, np.clip(Hs,10,np.max(Hs)),linewidth = 3, color = 'red', label = "HOOH")
-
-#ax3.set(xlabel='Time (days)', ylabel='HOOH per ml')
-
-
-ax1.semilogy()
-ax2.semilogy()
-#ax3.semilogy()
-
-
-
-
-
-
 
 
 

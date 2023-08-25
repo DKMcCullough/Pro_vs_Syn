@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 '''
-name:   leaky_contour.py 
+name:   kdam_phi_contour.py 
 
 location: /Users/dkm/Documents/Talmy_research/Zinser_lab/Projects/Competitions/Pro_vs_Syn/src
 
 Goal: 
-    Compete Pro and Syn on one nutrient N in leaky HOOH detox 
-    Syn has worse k1 value to compensate for HOOH detox energy/size costs
-    Pro has kdam caused by HOOH 
-    HOOH detoxed innately (deltah) or by Syn (phi)
-get coexistance in range of H and N supply rates? 
+make matrix of kdams and phis with contours shown for each!
 
 @author: dkm
 '''
@@ -34,8 +30,8 @@ import sys
 step = 0.001
 ndays = 600
 mtimes = np.linspace(0,ndays,int(ndays/step))
-SNs = np.linspace(0, 3000, num = 10)
-Shs = np.linspace(0, 3000, num = 10)
+SNs = np.linspace(0, 1000, num = 20)
+Shs = np.linspace(0, 1000, num =20)
 Z = np.zeros((int(SNs.shape[0]),int(Shs.shape[0])),float)
 
 
@@ -50,14 +46,15 @@ ksp = k2/k1p
 kss = k2/k1s
 dp = 0.2   #pro delta
 ds =  0.2   #syn delta
-kdam = 0.005   #hooh mediated damage rate of Pro  
+kdam = 0.025   #hooh mediated damage rate of Pro  
 deltah = 0.002       #decay rate of HOOH via Syn 
-phi =  0.08   #0007  #detoxification-based decay of HOOH via Syn in this case
+phi = 1.10E-06    #0007  #detoxification-based decay of HOOH via Syn in this case
 rho =  0.002
 
 #params = [ksp,kss,k2,dp,ds,kdam,deltah,phi,rho]
 
-
+#phis([0.005,0.05,0.5])
+#kdams([])
 
 #empty arrays to be populated by odeint when calling leak function
 P = np.array([])
@@ -100,7 +97,7 @@ for (i,SN) in zip(range(SNs.shape[0]),SNs):
         Nsc = leaky[:,2]
         Hsc = leaky[:,3]
         #print(Z[i,j])
-        if (i == 1) and (j == 1):
+        if (i == 8) and (j == 19):
             Ps = leaky[:,0]
             Ss = leaky[:,1]
             Ns = leaky[:,2]
@@ -120,17 +117,17 @@ for (i,SN) in zip(range(SNs.shape[0]),SNs):
             #print(Ssc[-1],Psc[-1])
             #sys.exit()'''
 
-
+plt.show()
 
 #####################################
 
 #  Graphing dynamic model 
 
 #####################################
-'''
+
 
 #fig,ax1 = plt.subplots()
-fig, (ax1, ax2,ax3) = plt.subplots(3,1, sharex=True, figsize=(9,5),dpi = 300)
+fig, (ax1, ax2,ax3) = plt.subplots(3,1, sharex=True, figsize=(9,5))
 fig.suptitle('Growth Competition Projections')
 plt.subplots_adjust(wspace = 0.5, top = 0.9,bottom = 0.1)
 
@@ -153,12 +150,12 @@ ax3.semilogy()
 
 #ax1.legend(loc = 'lower right')
 
-'''
+
 
 
 #plt.show()
 
-
+'''
 ##########################################################
 
 # Calculated analytical solutions at equilibrium
@@ -194,26 +191,23 @@ vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2*Nstarp*Pstar*Qnp)+(dp*Pstar)))
 
 
 #fig.savefig('../figures/leaky_calcs_auto',dpi=300)
-fig, (ax1, ax2,ax3) = plt.subplots(3,1, sharex=True, figsize=(9,5),dpi = 300)
-fig.suptitle('Growth Competition Projections')
-plt.subplots_adjust(wspace = 0.5, top = 0.95, bottom = 0.05)
 
-#fig4,  (ax1,ax2) = plt.subplots(2, 1, sharex=True,dpi = 300)
-#fig4.suptitle('Pro and Syn Dynamics')
-#,figsize=(9,5)
+
+fig4,  (ax1,ax2) = plt.subplots(2, 1, sharex=True,figsize=(9,5))
+fig4.suptitle('Leaky Zoom in')
+
 ax1.plot(mtimes, np.clip(Ps,1,np.max(Ps)) , linewidth = 3, color = 'g', label = 'Pro')
 ax1.plot(mtimes, np.clip(Ss,1,np.max(Ss)), linewidth = 3, color = 'orange', label = 'Syn')
 
-ax1.set(ylabel='Abundance  (ml$^{-1}$)')
+ax1.set(ylabel='cells per ml')
 
-ax2.set_ylabel('Nutrient (\u03BCM)')
+ax2.set_ylabel('Nutrient (per ml)')
 ax2.plot(mtimes, np.clip(Ns,10,np.max(Ns)),linewidth = 3, color = 'purple', label = "Nutrient")
 
-#fig2, ax3 = plt.subplots()
+fig2, ax3 = plt.subplots()
 ax3.plot(mtimes, np.clip(Hs,10,np.max(Hs)),linewidth = 3, color = 'red', label = "HOOH")
 
-ax3.set(xlabel='Time (days)', ylabel='HOOH (\u03BCM)')
-
+ax3.set(xlabel='Time (days)', ylabel='HOOH per ml')
 
 
 ax1.semilogy()
@@ -221,30 +215,30 @@ ax2.semilogy()
 
 ##### graphing stars equations ############### 
 
-ax1.axhline(Sstar,color = 'orangered', linestyle = "-.",label = 'S*')
-ax1.axhline(Pstar,color = 'darkgreen', linestyle = ":",label = 'P*')
+ax1.axhline(Sstar,color = 'brown', linestyle = "-.",label = 'S*')
+ax1.axhline(Pstar,color = 'green', linestyle = ":",label = 'P*')
 #ax2.axhline(Nstar,color = 'purple', linestyle = "-.",label = 'Nstar')
 
-ax2.axhline(Nstars,color = 'pink', linestyle = "-.",label = 'Ns*')
-ax2.axhline(Nstarp,color = 'magenta', linestyle = ":",label = 'Np*')
-#ax3.axhline(Hstar,color = 'red', linestyle = "-.",label = 'H*')
-#ax2.axhline(Nstars,color = 'purple', linestyle = "-.",label = 'N*s')
-#ax2.axhline(Nstarp,color = 'magenta', linestyle = ":",label = 'N*p')
+ax2.axhline(Nstars,color = 'purple', linestyle = "-.",label = 'N*s')
+ax2.axhline(Nstarp,color = 'magenta', linestyle = ":",label = 'N*p')
+ax3.axhline(Hstar,color = 'red', linestyle = "-.",label = 'H*')
 
 ax1.legend(loc = 'best')
 ax2.legend(loc = 'best')
 ax3.legend(loc = 'best')
-'''
 
+'''
 #######################################
 # Graphing Cotour plots from 
 ######################################
 
-fig3,(ax1) = plt.subplots(sharex = True, sharey = True, dpi = 300)
-fig3.suptitle('HOOH Contour with Phi')# + str(phi))
-# figsize = (8,5)
+fig3,(ax1) = plt.subplots(sharex = True, sharey = True, figsize = (8,5))
+fig3.suptitle('Leaky HOOH Contour')
+
 grid = ax1.pcolormesh( Shs, SNs, np.where(Z == -1, np.nan, Z), vmin=0, vmax=np.max(Z), cmap = 'summer', shading= 'auto'  )  #'gouraud'
 ax1.set(xlabel='Supply HOOH')
+ax1.text(x=2000, y = 2000, s=('phi = '+str(phi)),fontsize = 16)
+ax1.text(x=2000, y = 1500, s=('kdam ='+str(kdam)),fontsize = 16)
 ax1.set(ylabel='Supply N')
 
 #np.max(Z)
@@ -259,7 +253,13 @@ fig3.colorbar(grid, cmap= 'summer',label = 'S / S+P')
 #plt.colorbar.set_label('S/P+S')
 
 fig3.savefig('../figures/no_leak_contour_f3_auto',dpi=300)
-'''
+
 print('') #printing blank line 
-#print('*** Nstars? or Sh cut off?  ***')
+print('*** Nstars? or Sh cut off?  ***')
 print('*** Done ***')
+
+
+
+
+
+

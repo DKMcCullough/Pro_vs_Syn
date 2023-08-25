@@ -113,16 +113,16 @@ for (i,SN) in zip(range(SNs.shape[0]),SNs):
 fig4,  (ax1,ax2) = plt.subplots(2, 1, sharex=True,figsize=(9,5))
 fig4.suptitle('Leaky Zoom in')
 
-ax1.plot(mtimes, np.clip(Ps,10,np.max(Ps)) , linewidth = 3, color = 'g', label = 'Pro')
-ax1.plot(mtimes, np.clip(Ss,10,np.max(Ss)), linewidth = 3, color = 'orange', label = 'Syn')
+ax1.plot(mtimes, np.clip(Ps,1,np.max(Ps)) , linewidth = 3, color = 'g', label = 'Pro')
+ax1.plot(mtimes, np.clip(Ss,1,np.max(Ss)), linewidth = 3, color = 'orange', label = 'Syn')
 
 ax1.set(ylabel='cells per ml')
 
 ax2.set_ylabel('Nutrient (per ml)')
-ax2.plot(mtimes, np.clip(Ns,10,np.max(Ns)),linewidth = 3, color = 'purple', label = "Nutrient")
+ax2.plot(mtimes, np.clip(Ns,1,np.max(Ns)),linewidth = 3, color = 'purple', label = "Nutrient")
 
 fig2, ax3 = plt.subplots()
-ax3.plot(mtimes, np.clip(Hs,10,np.max(Hs)),linewidth = 3, color = 'red', label = "HOOH")
+ax3.plot(mtimes, np.clip(Hs,1,np.max(Hs)),linewidth = 3, color = 'red', label = "HOOH")
 
 ax3.set(xlabel='Time (days)', ylabel='HOOH per ml')
 
@@ -159,12 +159,12 @@ vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2*Nstarp*Pstar*Qnp)+(dp*Pstar)))
 
 ##### graphing stars equations ############### 
 
-ax1.axhline(Sstar,color = 'brown', linestyle = "-.",label = 'Sstar')
-ax1.axhline(Pstar,color = 'green', linestyle = ":",label = 'Pstar')
+ax1.axhline(Sstar,color = 'brown', linestyle = "-.",label = 'S*')
+ax1.axhline(Pstar,color = 'green', linestyle = ":",label = 'P*')
 #ax2.axhline(Nstar,color = 'purple', linestyle = "-.",label = 'Nstar')
 
-ax2.axhline(Nstars,color = 'purple', linestyle = "-.",label = 'Nstars')
-ax2.axhline(Nstarp,color = 'magenta', linestyle = ":",label = 'Nstarp')
+ax2.axhline(Nstars,color = 'purple', linestyle = "-.",label = 'N*s')
+ax2.axhline(Nstarp,color = 'magenta', linestyle = ":",label = 'N*p')
 ax3.axhline(Hstar,color = 'red', linestyle = "-.",label = 'Hstar')
 
 ax1.legend(loc = 'lower center')
