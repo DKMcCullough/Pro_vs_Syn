@@ -31,8 +31,8 @@ from scipy.integrate import odeint
 step = 0.001
 ndays = 400 
 mtimes = np.linspace(0,ndays,int(ndays/step))
-Shs = np.linspace(0, 1000, num = 10)
-SNs = np.linspace(0, 1000, num = 10)
+Shs = np.linspace(0, 30000, num = 10)
+SNs = np.linspace(0, 30000, num = 10)
 Z = np.zeros((int(SNs.shape[0]),int(Shs.shape[0])),float)
 
 #initial values 
@@ -192,7 +192,7 @@ ax2.legend(loc = 'lower center')
 
 
 
-'''
+
 #####################################
 
 #  Graphing
@@ -250,10 +250,10 @@ fig3.suptitle('Non_leaky Contour')
 grid = ax1.pcolormesh( Shs,SNs, np.where(Z == -1, np.nan, Z), vmin=0, vmax=np.max(Z), cmap = 'summer', shading='auto')  #'summer_r is reversed color map shading
 #np.where(Z == 17, np.nan, Z)
 
-ax1.axhline((rho*Nstars),color = 'purple', linestyle = "-.",label = 'SN cutoff for S growth?')
-ax1.axhline((rho*Nstarp),color = 'magenta', linestyle = "-.",label = 'SN cutoff for P growth?')
+#ax1.axhline((rho*Nstars),color = 'purple', linestyle = "-.",label = 'SN cutoff for S growth?')
+#ax1.axhline((rho*Nstarp),color = 'magenta', linestyle = "-.",label = 'SN cutoff for P growth?')
 #ax1.axhline((rho*Nstarph),color = 'orange', linestyle = "-.",label = 'SN cutoff for P+H growth?')
-ax1.axvline((vHline),color = 'c', linestyle = "-.",label = 'H cutoff?')
+#ax1.axvline((vHline),color = 'c', linestyle = "-.",label = 'H cutoff?')
 
 #ax1.axhline(((rho*Nstar)+(((k2*Nstar)/(Nstar-kss))*Sstar*Qns)),color = 'magenta', linestyle = "-.",label = 'Sn cut off on S?')
 
@@ -266,7 +266,7 @@ plt.legend()
 
 fig3.savefig('../figures/no_leak_contour_f3_auto',dpi=300)
 
-'''
+
 
 
 

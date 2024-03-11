@@ -34,8 +34,8 @@ import sys
 step = 0.001
 ndays = 600
 mtimes = np.linspace(0,ndays,int(ndays/step))
-SNs = np.linspace(0, 3000, num = 20)
-Shs = np.linspace(0, 3000, num =20)
+SNs = np.linspace(0, 300, num = 20)
+Shs = np.linspace(0, 300, num =20)
 Z = np.zeros((int(SNs.shape[0]),int(Shs.shape[0])),float)
 phis = np.array(np.linspace(0.000000001,0.00001, num =10))
 

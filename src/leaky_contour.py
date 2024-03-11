@@ -42,20 +42,34 @@ Z = np.zeros((int(SNs.shape[0]),int(Shs.shape[0])),float)
 #parameters
 Qnp = 1#(9.4e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Pro from Bertilison 
 Qns = 1#(20.0e-15*(1/(14.0))*1e+9) 
-
-k1p =  0.00002     #Pro alpha
-k1s =  0.00001      #Syn alpha 
-k2 =  0.88    #Vmax    shared for P and S here
-ksp = k2/k1p
-kss = k2/k1s
-dp = 0.2   #pro delta
-ds =  0.2   #syn delta
-kdam = 0.005   #hooh mediated damage rate of Pro  
+'''
+k1p =  50001   #Pro alpha
+k1s =  50000    #5405795040 #Syn alpha 
+k2p =  0.4    #Vmax     P
+k2s =  0.4  #Vmax     S  #0.300748361
+ksp = k2p/k1p
+kss = k2s/k1s
+dp = 0.01   #pro innate delta
+ds =  0.01   #syn innate delta
+kdam = 5    #0.005 is other data Pro kdam value  #hooh mediated damage rate of Pro  
 deltah = 0.002       #decay rate of HOOH via Syn 
-phi =  0.08   #0007  #detoxification-based decay of HOOH via Syn in this case
+phi =  0.02   #0007  #detoxification-based decay of HOOH via Syn in this case
 rho =  0.002
 
-#params = [ksp,kss,k2,dp,ds,kdam,deltah,phi,rho]
+'''
+k1p =  200000     #Pro alpha
+k1s =  100000    #Syn alpha 
+
+k2p =  0.5    #Vmax     P
+k2s =  0.5  #Vmax     S  #0.300748361
+ksp = k2p/k1p
+kss = k2s/k1s
+dp = 0.002   #pro delta
+ds =  0.002   #syn delta
+kdam = 0.5   #hooh mediated damage rate of Pro  
+deltah = 0.002       #decay rate of HOOH via Syn 
+phi = 0.02    #0007  #detoxification-based decay of HOOH via Syn in this case
+rho =  0.002
 
 
 
@@ -79,9 +93,9 @@ inits = (P0,S0,N0,H0)
 def leak(y,t,params):
     ksp,kss,k2,dp,ds,kdam,deltah,phi,rho,SN,Sh = params[0], params[1], params[2], params[3],params[4], params[5], params[6], params[7],params[8],params[9], params[-1]
     P,S,N,H = y[0],y[1],y[2],y[3]
-    dPdt = (k2 * N /( (ksp) + N) )*P - (dp *P) - kdam*H*P
-    dSdt =(k2 * N /( (kss) + N))*S - (ds *S) #- kdams*H*S      
-    dNdt =  SN - ((k2 * N /( (ksp) + N) )*P* Qnp) - ((k2 * N /( (kss) + N))*S* Qns) - rho*N    
+    dPdt = (k2p * N /( (ksp) + N) )*P - (dp *P) - kdam*H*P
+    dSdt =(k2s * N /( (kss) + N))*S - (ds *S) #- kdams*H*S      
+    dNdt =  SN - ((k2p * N /( (ksp) + N) )*P* Qnp) - ((k2s * N /( (kss) + N))*S* Qns) - rho*N    
     dHdt = Sh - deltah*H  -phi*S*H  #phi being S cell-specific detox rate
     return [dPdt,dSdt,dNdt,dHdt]
 
@@ -93,14 +107,14 @@ def leak(y,t,params):
 
 for (i,SN) in zip(range(SNs.shape[0]),SNs):
     for (j,Sh) in zip(range(Shs.shape[0]),Shs):
-        params = [ksp,kss,k2,dp,ds,kdam,deltah,phi,rho, SN, Sh]
+        params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho, SN, Sh]
         leaky  = odeint(leak, inits, mtimes, args = (params,))
         Psc = leaky[:,0]
         Ssc = leaky[:,1]
         Nsc = leaky[:,2]
         Hsc = leaky[:,3]
         #print(Z[i,j])
-        if (i == 1) and (j == 1):
+        if (i == 7) and (j == 4):
             Ps = leaky[:,0]
             Ss = leaky[:,1]
             Ns = leaky[:,2]
@@ -169,26 +183,26 @@ ax3.semilogy()
 ###### coesistance equilibrium (star equations ) ###########
 
 #Coexist
-Nstar = (kss*ds)/(k2-ds)
-Hstar = (((k2*Nstar)/(Nstar + ksp))-(dp))*(1/kdam)
+Nstar = (kss*ds)/(k2s-ds)
+Hstar = (((k2p*Nstar)/(Nstar + ksp))-(dp))*(1/kdam)
 Sstar = (Sh - deltah*Hstar)/(phi*Hstar)
-Pstar = ((SN-rho*Nstar)*(Nstar + ksp))/(k2*Nstar*Qnp)
+Pstar = ((SN-rho*Nstar)*(Nstar + ksp))/(k2p*Nstar*Qnp)
 
 
 
 #Pwin 
-Nstarp = ((ksp*dp )+(ksp*kdam))/((k2*Qnp) - dp - kdam)
-Pstarp = (SN - rho*Nstarp)*((Nstarp + ksp)/((k2*Nstarp)*Qnp))
+Nstarp = ((ksp*dp )+(ksp*kdam))/((k2p*Qnp) - dp - kdam)
+Pstarp = (SN - rho*Nstarp)*((Nstarp + ksp)/((k2p*Nstarp)*Qnp))
 Hstarp = Sh/(deltah+phi*Pstar)  #do we need toassume H must be 0 for P to win?????
 
 #Swin 
-Nstars = (ds*kss)/((k2*Qns)-ds)
-Sstars = (SN - rho*Nstars)*(((Nstars + kss)/(k2*Nstars*Qns)))
+Nstars = (ds*kss)/((k2s*Qns)-ds)
+Sstars = (SN - rho*Nstars)*(((Nstars + kss)/(k2s*Nstars*Qns)))
 Hstars = Sh/(deltah)
 
 
-Nstarph = ((ksp*dp )+(ksp*kdam*Hstar))/((k2*Qnp) - dp - (kdam*Hstar))
-vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2*Nstarp*Pstar*Qnp)+(dp*Pstar)))
+Nstarph = ((ksp*dp )+(ksp*kdam*Hstar))/((k2p*Qnp) - dp - (kdam*Hstar))
+vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2p*Nstarp*Pstar*Qnp)+(dp*Pstar)))
 
 
 
@@ -196,7 +210,7 @@ vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2*Nstarp*Pstar*Qnp)+(dp*Pstar)))
 #fig.savefig('../figures/leaky_calcs_auto',dpi=300)
 fig, (ax1, ax2,ax3) = plt.subplots(3,1, sharex=True, figsize=(9,5),dpi = 300)
 fig.suptitle('Growth Competition Projections')
-plt.subplots_adjust(wspace = 0.5, top = 0.95, bottom = 0.05)
+plt.subplots_adjust(wspace = 0.5, top = 0.95, bottom = 0.1)
 
 #fig4,  (ax1,ax2) = plt.subplots(2, 1, sharex=True,dpi = 300)
 #fig4.suptitle('Pro and Syn Dynamics')
@@ -234,7 +248,7 @@ ax2.axhline(Nstarp,color = 'magenta', linestyle = ":",label = 'Np*')
 ax1.legend(loc = 'best')
 ax2.legend(loc = 'best')
 ax3.legend(loc = 'best')
-'''
+
 
 #######################################
 # Graphing Cotour plots from 
@@ -259,7 +273,7 @@ fig3.colorbar(grid, cmap= 'summer',label = 'S / S+P')
 #plt.colorbar.set_label('S/P+S')
 
 fig3.savefig('../figures/no_leak_contour_f3_auto',dpi=300)
-'''
+
 print('') #printing blank line 
 #print('*** Nstars? or Sh cut off?  ***')
 print('*** Done ***')
