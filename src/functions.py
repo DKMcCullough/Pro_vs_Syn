@@ -56,7 +56,7 @@ def Pwins (params):
 def Swins (params): 
     Nstar = (ds*kss)/((k2s*Qns)-ds)
     Sstar = (SN - rho*Nstar)*(((Nstar + kss)/(k2s*Nstar*Qns)))
-    Hstar = Sh/(deltah)
+    Pstar = 0
     Hstar = Sh/(deltah+phi*Pstar)  #do we need toassume H must be 0 for P to win?????
     return  Nstar, Pstar, Sstar, Hstar 
 

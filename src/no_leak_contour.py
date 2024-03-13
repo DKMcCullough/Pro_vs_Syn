@@ -6,14 +6,12 @@ name:   no_leak_contour.py
 location: /Users/dkm/Documents/Talmy_research/Zinser_lab/Projects/Competitions/Pro_vs_Syn/src
 
 Goal: 
-Compete Pro and Syn on one nutrient N with HOOH only effecting Pro 
-create contour graph to show Hsupply and N supply rates on x and y axis 
-print out color of green (pro wins) or yellow (syn wins) along arrays of H and N supply 
 
 @author: dkm
 
 
 """
+
 from functions import * 
 import pandas as pd
 import numpy as np
@@ -26,6 +24,7 @@ from scipy.integrate import odeint
 #####################
 # Set UP
 ######################
+
 #for nonleaky H detox
 phi = 0
 
@@ -64,6 +63,8 @@ Sh = 0
 SN = 1e4
 params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh]
 
+#get equilibria
+Pwins(params) #use function from other file to get equilibria
 
 #run model 
 
@@ -81,25 +82,8 @@ Hs = competition[:,3]
 
 ##########################################################
 
-'''
-##### S wins #########
-
-Nstars = (ds*kss)/((k2*Qns)-ds)
-
-#Hstar = Sh/deltah
-Sstar = (SN - rho*Nstars)*(((Nstars + kss)/(k2*Nstars*Qns)))
-
-##### P wins #########
-Nstarp = ((ksp*dp )+(ksp*kdam))/((k2*Qnp) - dp - kdam)
-
-Hstar = Sh/deltah
-
-Pstar = (SN - rho*Nstarp)*((Nstarp + ksp)/((k2*Nstarp)*Qnp))
-
-Nstarph = ((ksp*dp )+(ksp*kdam*Hstar))/((k2*Qnp) - dp - (kdam*Hstar))
-vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2*Nstarp*Pstar*Qnp)+(dp*Pstar)))
-'''
 #graph for P winning 
+
 
 fig1, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True, figsize=(12,8),dpi = 300)
 
@@ -113,13 +97,12 @@ ax1.plot(mtimes, Ps , linewidth = 3, color = 'g', label = 'Pro')#' k1 =' + str(k
 ax1.plot(mtimes, Ss, linewidth = 3, color = 'orange', label = 'Syn')#' k1 =' + str(k1s))
 ax2.plot(mtimes, Ns,linewidth = 3, color = 'purple', label = "Nutrient")
 ax3.plot(mtimes, Hs,linewidth = 3, color = 'red', label = "HOOH")
-'''
+
 ax1.axhline(Sstar,color = 'orange', linestyle = "-.",label = 'S*')
 ax1.axhline(Pstar,color = 'g', linestyle = "-.",label = 'P*')
 ax2.axhline(Nstars,color = 'purple', linestyle = "-.",label = 'N*s')
-ax2.axhline(Nstarp,color = 'magenta', linestyle = "-.",label = 'N*p')
 ax3.axhline(Hstar,color = 'red', linestyle = "-.",label = 'H*')
-'''
+
 ax1.semilogy()
 ax2.semilogy()
 ax3.semilogy()
@@ -146,7 +129,7 @@ Sh = 250
 SN = 1e4
 params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh]
 
-
+Swins(params)
 #run model 
 
 competition  = odeint(leak, inits, mtimes, args = (params,))
@@ -178,13 +161,12 @@ ax1.plot(mtimes, Ps , linewidth = 3, color = 'g', label = 'Pro')#' k1 =' + str(k
 ax1.plot(mtimes, Ss, linewidth = 3, color = 'orange', label = 'Syn')#' k1 =' + str(k1s))
 ax2.plot(mtimes, Ns,linewidth = 3, color = 'purple', label = "Nutrient")
 ax3.plot(mtimes, Hs,linewidth = 3, color = 'red', label = "HOOH")
-'''
+
 ax1.axhline(Sstar,color = 'orange', linestyle = "-.",label = 'S*')
 ax1.axhline(Pstar,color = 'g', linestyle = "-.",label = 'P*')
 ax2.axhline(Nstars,color = 'purple', linestyle = "-.",label = 'N*s')
-ax2.axhline(Nstarp,color = 'magenta', linestyle = "-.",label = 'N*p')
 ax3.axhline(Hstar,color = 'red', linestyle = "-.",label = 'H*')
-'''
+
 ax1.semilogy()
 ax2.semilogy()
 ax3.semilogy()

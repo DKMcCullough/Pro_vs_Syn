@@ -5,12 +5,6 @@ name:   leaky_contour.py
 
 location: /Users/dkm/Documents/Talmy_research/Zinser_lab/Projects/Competitions/Pro_vs_Syn/src
 
-Goal: 
-    Compete Pro and Syn on one nutrient N in leaky HOOH detox 
-    Syn has worse k1 value to compensate for HOOH detox energy/size costs
-    Pro has kdam caused by HOOH 
-    HOOH detoxed innately (deltah) or by Syn (phi)
-get coexistance in range of H and N supply rates? 
 
 @author: dkm
 '''
