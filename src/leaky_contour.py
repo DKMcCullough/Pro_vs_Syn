@@ -119,32 +119,31 @@ Nstarph = ((ksp*dp )+(ksp*kdam*Hstar))/((k2p*Qnp) - dp - (kdam*Hstar))
 vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2p*Nstarp*Pstar*Qnp)+(dp*Pstar)))
 
 
-#####################################
-
-#creating and slicing dyanmics 
 
 #####################################
 
+#  Graphing P winning dynamic model 
+
+#####################################
+#params for P to Win 
+Sh = 10
+SN = 200
+params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh]
+
+
+#run model 
 
 competition  = odeint(leak, inits, mtimes, args = (params,))
 
-
-
+#grab values to graph 
 Ps = competition[:,0]
 Ss = competition[:,1]
 Ns = competition[:,2]
 Hs = competition[:,3]
 
-
-
-#####################################
-
-#  Graphing dynamic model 
-
-#####################################
-
+#graaph dynamics where P dominates 
 fig1, (ax1, ax2,ax3) = plt.subplots(3,1, sharex=True, figsize=(9,5),dpi = 300)
-fig1.suptitle('Growth Competition Projections')
+fig1.suptitle('Growth Competition Projections in Sn'+ str(SN)+' Sh '+str(Sh))
 plt.subplots_adjust(wspace = 0.5, top = 0.9,bottom = 0.1)
 ax1.set(xlabel='Time (days)', ylabel='cells per ml')
 ax2.set(xlabel='Time (days)', ylabel='Nutrient [ ]')
@@ -160,13 +159,13 @@ ax1.semilogy()
 ax2.semilogy()
 ax3.semilogy()
 
-fig1.savefig('../figures/leaky_dyanmics',dpi=300)
+fig1.savefig('../figures/leaky_dyanmics_p'),dpi=300)
 plt.show()
 
 
 #####################################
 
-#graph equilibria
+#P dominaated coexistence 
 
 #####################################
 

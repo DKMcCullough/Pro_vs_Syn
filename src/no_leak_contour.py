@@ -230,8 +230,8 @@ fig2.savefig('../figures/no_leak_dyanmics_Swins',dpi=300)
 ##############################
 
 
-Shs = np.linspace(0, 500, num = 100)
-SNs = np.linspace(0, 500, num = 100)
+Shs = np.linspace(0, 500, num = 10)
+SNs = np.linspace(0, 500, num = 10)
 Z = np.zeros((int(SNs.shape[0]),int(Shs.shape[0])),float)
 
 
