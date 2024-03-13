@@ -82,6 +82,29 @@ def nleak(y,t,params):
 
 
 
+
+
+##############################
+#  P wining Dynamics 
+##############################
+
+
+#params for P to Win 
+Sh = 50
+SN = 300
+params = [ksp,kss,k2,dp,ds,kdam,deltah,rho,SN,Sh]
+
+
+#run model 
+
+competition  = odeint(nleak, inits, mtimes, args = (params,))
+
+#grab values to graph 
+Ps = competition[:,0]
+Ss = competition[:,1]
+Ns = competition[:,2]
+Hs = competition[:,3]
+
 ##########################################################
 
 # Calculated analytical solutions at equilibrium
@@ -106,29 +129,6 @@ Pstar = (SN - rho*Nstarp)*((Nstarp + ksp)/((k2*Nstarp)*Qnp))
 
 Nstarph = ((ksp*dp )+(ksp*kdam*Hstar))/((k2*Qnp) - dp - (kdam*Hstar))
 vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2*Nstarp*Pstar*Qnp)+(dp*Pstar)))
-
-
-##############################
-#  P wining Dynamics 
-##############################
-
-
-#params for P to Win 
-Sh = 0
-SN = 200
-params = [ksp,kss,k2,dp,ds,kdam,deltah,rho,SN,Sh]
-
-
-#run model 
-
-competition  = odeint(nleak, inits, mtimes, args = (params,))
-
-#grab values to graph 
-Ps = competition[:,0]
-Ss = competition[:,1]
-Ns = competition[:,2]
-Hs = competition[:,3]
-
 
 #graph for P winning 
 
@@ -173,8 +173,8 @@ plt.show()
 ##############################
 
 #params for S to Win 
-Sh = 10
-SN = 200
+Sh = 300
+SN = 300
 params = [ksp,kss,k2,dp,ds,kdam,deltah,rho,SN,Sh]
 
 
@@ -188,6 +188,30 @@ Ss = competition[:,1]
 Ns = competition[:,2]
 Hs = competition[:,3]
 
+##########################################################
+
+# Calculated analytical solutions at equilibrium
+
+##########################################################
+
+
+##### S wins #########
+
+Nstars = (ds*kss)/((k2*Qns)-ds)
+
+#Hstar = Sh/deltah
+Sstar = (SN - rho*Nstars)*(((Nstars + kss)/(k2*Nstars*Qns)))
+
+
+##### P wins #########
+Nstarp = ((ksp*dp )+(ksp*kdam))/((k2*Qnp) - dp - kdam)
+
+Hstar = Sh/deltah
+
+Pstar = (SN - rho*Nstarp)*((Nstarp + ksp)/((k2*Nstarp)*Qnp))
+
+Nstarph = ((ksp*dp )+(ksp*kdam*Hstar))/((k2*Qnp) - dp - (kdam*Hstar))
+vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2*Nstarp*Pstar*Qnp)+(dp*Pstar)))
 
 #graph for S winning 
 
