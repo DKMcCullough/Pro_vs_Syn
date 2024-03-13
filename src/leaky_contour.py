@@ -92,6 +92,30 @@ def leak(y,t,params):
     return [dPdt,dSdt,dNdt,dHdt]
 
 
+
+
+#####################################
+
+#  P dominated dynamic model 
+
+#####################################
+#params for P to Win 
+Sh = 10
+SN = 200
+params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh]
+
+
+#run model 
+
+competition  = odeint(leak, inits, mtimes, args = (params,))
+
+
+#grab values to graph 
+Ps = competition[:,0]
+Ss = competition[:,1]
+Ns = competition[:,2]
+Hs = competition[:,3]
+
 ##########################################################
 
 # Calculated analytical solutions at equilibrium
@@ -119,28 +143,6 @@ Nstarph = ((ksp*dp )+(ksp*kdam*Hstar))/((k2p*Qnp) - dp - (kdam*Hstar))
 vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2p*Nstarp*Pstar*Qnp)+(dp*Pstar)))
 
 
-
-#####################################
-
-#  Graphing P winning dynamic model 
-
-#####################################
-#params for P to Win 
-Sh = 10
-SN = 200
-params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh]
-
-
-#run model 
-
-competition  = odeint(leak, inits, mtimes, args = (params,))
-
-#grab values to graph 
-Ps = competition[:,0]
-Ss = competition[:,1]
-Ns = competition[:,2]
-Hs = competition[:,3]
-
 #graaph dynamics where P dominates 
 fig1, (ax1, ax2,ax3) = plt.subplots(3,1, sharex=True, figsize=(9,5),dpi = 300)
 fig1.suptitle('Growth Competition Projections in Sn'+ str(SN)+' Sh '+str(Sh))
@@ -154,34 +156,6 @@ ax1.plot(mtimes, Ps , linewidth = 3, color = 'g', label = 'Pro ') #'k1 =' + str(
 ax1.plot(mtimes, Ss , linewidth = 3, color = 'orange', label = 'Syn ') #'k1 =' + str(k1s))
 ax2.plot(mtimes, Ns, linewidth = 3, color = 'purple', label = "Nutrient Concentration ")
 ax3.plot(mtimes, Hs,  linewidth = 3, color = 'red', label = "HOOH concentration ")
-
-ax1.semilogy()
-ax2.semilogy()
-ax3.semilogy()
-
-fig1.savefig('../figures/leaky_dyanmics_p'),dpi=300)
-plt.show()
-
-
-#####################################
-
-#P dominaated coexistence 
-
-#####################################
-
-fig2, (ax1, ax2,ax3) = plt.subplots(3,1, sharex=True, figsize=(9,5),dpi = 300)
-fig2.suptitle('Leaky Growth Competition with Equilibria')
-ax1.set(ylabel='Abundance  (ml$^{-1}$)')
-ax2.set_ylabel('Nutrient (\u03BCM)')
-ax3.set(xlabel='Time (days)', ylabel='HOOH (\u03BCM)')
-
-plt.subplots_adjust(wspace = 0.5, top = 0.95, bottom = 0.1)
-#dyanmics again to compare to equilibria
-ax1.plot(mtimes, Ps , linewidth = 3, color = 'g', label = 'Pro ') #'k1 =' + str(k1p))
-ax1.plot(mtimes, Ss , linewidth = 3, color = 'orange', label = 'Syn ') #'k1 =' + str(k1s))
-ax2.plot(mtimes, Ns, linewidth = 3, color = 'purple', label = "Nutrient Concentration ")
-ax3.plot(mtimes, Hs,  linewidth = 3, color = 'red', label = "HOOH concentration ")
-
 
 ##### graphing stars equations ############### 
 
@@ -197,15 +171,98 @@ ax1.semilogy()
 ax2.semilogy()
 ax3.semilogy()
 
-ax1.legend(loc = 'best')
-ax2.legend(loc = 'best')
-ax3.legend(loc = 'best')
+fig1.savefig('../figures/leaky_dyanmics_P',dpi=300)
+plt.show()
 
-fig2.savefig('../figures/leaky_dyanmics_equilibria',dpi=300)
+
+#####################################
+
+#  S dominated dynamic model 
+
+#####################################
+#params for S to Win 
+Sh = 100
+SN = 200
+params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh]
+
+
+#run model 
+
+competition  = odeint(leak, inits, mtimes, args = (params,))
+
+
+#grab values to graph 
+Ps = competition[:,0]
+Ss = competition[:,1]
+Ns = competition[:,2]
+Hs = competition[:,3]
+
+##########################################################
+
+# Calculated analytical solutions at equilibrium
+
+##########################################################
+
+#Coexist
+Nstar = (kss*ds)/(k2s-ds)
+Hstar = (((k2p*Nstar)/(Nstar + ksp))-(dp))*(1/kdam)
+Sstar = (Sh - deltah*Hstar)/(phi*Hstar)
+Pstar = ((SN-rho*Nstar)*(Nstar + ksp))/(k2p*Nstar*Qnp)
+
+#Pwin 
+Nstarp = ((ksp*dp )+(ksp*kdam))/((k2p*Qnp) - dp - kdam)
+Pstarp = (SN - rho*Nstarp)*((Nstarp + ksp)/((k2p*Nstarp)*Qnp))
+Hstarp = Sh/(deltah+phi*Pstar)  #do we need toassume H must be 0 for P to win?????
+
+#Swin 
+Nstars = (ds*kss)/((k2s*Qns)-ds)
+Sstars = (SN - rho*Nstars)*(((Nstars + kss)/(k2s*Nstars*Qns)))
+Hstars = Sh/(deltah)
+
+
+Nstarph = ((ksp*dp )+(ksp*kdam*Hstar))/((k2p*Qnp) - dp - (kdam*Hstar))
+vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2p*Nstarp*Pstar*Qnp)+(dp*Pstar)))
+
+
+#graaph dynamics where S dominates 
+fig1, (ax1, ax2,ax3) = plt.subplots(3,1, sharex=True, figsize=(9,5),dpi = 300)
+fig1.suptitle('Growth Competition Projections in Sn'+ str(SN)+' Sh '+str(Sh))
+plt.subplots_adjust(wspace = 0.5, top = 0.9,bottom = 0.1)
+ax1.set(xlabel='Time (days)', ylabel='cells per ml')
+ax2.set(xlabel='Time (days)', ylabel='Nutrient [ ]')
+ax3.set(xlabel='Time (days)', ylabel='HOOH [ ]')
+
+
+ax1.plot(mtimes, Ps , linewidth = 3, color = 'g', label = 'Pro ') #'k1 =' + str(k1p))
+ax1.plot(mtimes, Ss , linewidth = 3, color = 'orange', label = 'Syn ') #'k1 =' + str(k1s))
+ax2.plot(mtimes, Ns, linewidth = 3, color = 'purple', label = "Nutrient Concentration ")
+ax3.plot(mtimes, Hs,  linewidth = 3, color = 'red', label = "HOOH concentration ")
+
+##### graphing stars equations ############### 
+
+ax1.axhline(Sstar,color = 'orangered', linestyle = "-.",label = 'S*')
+ax1.axhline(Pstar,color = 'darkgreen', linestyle = ":",label = 'P*')
+ax2.axhline(Nstar,color = 'purple', linestyle = "-.",label = 'Nstar')
+
+ax2.axhline(Nstars,color = 'pink', linestyle = "-.",label = 'Ns*')
+ax2.axhline(Nstarp,color = 'magenta', linestyle = ":",label = 'Np*')
+ax3.axhline(Hstar,color = 'red', linestyle = "-.",label = 'H*')
+
+ax1.semilogy()
+ax2.semilogy()
+ax3.semilogy()
+
+fig1.savefig('../figures/leaky_dyanmics_S',dpi=300)
+
+
+
+
 
 ##############################
 #Contour and model calculations 
 ##############################
+
+
 SNs = np.linspace(0, 500, num = 140)
 Shs = np.linspace(0, 1000, num = 40)
 Z = np.zeros((int(SNs.shape[0]),int(Shs.shape[0])),float)
