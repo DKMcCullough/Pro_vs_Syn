@@ -64,7 +64,7 @@ SN = 1e4
 params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh]
 
 #get equilibria
-Pwins(params) #use function from other file to get equilibria
+[Nstar, Pstar, Sstar, Hstar] = Pwins(params) #use function from other file to get equilibria
 
 #run model 
 
@@ -100,7 +100,7 @@ ax3.plot(mtimes, Hs,linewidth = 3, color = 'red', label = "HOOH")
 
 ax1.axhline(Sstar,color = 'orange', linestyle = "-.",label = 'S*')
 ax1.axhline(Pstar,color = 'g', linestyle = "-.",label = 'P*')
-ax2.axhline(Nstars,color = 'purple', linestyle = "-.",label = 'N*s')
+ax2.axhline(Nstar,color = 'purple', linestyle = "-.",label = 'N*s')
 ax3.axhline(Hstar,color = 'red', linestyle = "-.",label = 'H*')
 
 ax1.semilogy()
@@ -129,8 +129,9 @@ Sh = 250
 SN = 1e4
 params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh]
 
-Swins(params)
+[Nstar, Pstar, Sstar, Hstar] = Swins(params)
 #run model 
+
 
 competition  = odeint(leak, inits, mtimes, args = (params,))
 
@@ -164,7 +165,7 @@ ax3.plot(mtimes, Hs,linewidth = 3, color = 'red', label = "HOOH")
 
 ax1.axhline(Sstar,color = 'orange', linestyle = "-.",label = 'S*')
 ax1.axhline(Pstar,color = 'g', linestyle = "-.",label = 'P*')
-ax2.axhline(Nstars,color = 'purple', linestyle = "-.",label = 'N*s')
+ax2.axhline(Nstar,color = 'purple', linestyle = "-.",label = 'N*s')
 ax3.axhline(Hstar,color = 'red', linestyle = "-.",label = 'H*')
 
 ax1.semilogy()
@@ -222,10 +223,10 @@ fig2.suptitle('Non_leaky Contour')
 grid = ax1.pcolormesh( Shs,SNs, np.where(Z == -1, np.nan, Z), vmin=0, vmax=np.max(Z), cmap = 'summer', shading='auto')  #'summer_r is reversed color map shading
 #np.where(Z == 17, np.nan, Z)
 
-ax1.axhline((rho*Nstars),color = 'purple', linestyle = "-.",label = 'SN cutoff for S growth?')
-ax1.axhline((rho*Nstarp),color = 'magenta', linestyle = "-.",label = 'SN cutoff for P growth?')
-ax1.axhline((rho*Nstarph),color = 'orange', linestyle = "-.",label = 'SN cutoff for P+H growth?')
-ax1.axvline((vHline),color = 'c', linestyle = "-.",label = 'H cutoff?')
+#ax1.axhline((rho*Nstar),color = 'purple', linestyle = "-.",label = 'SN cutoff for S growth?')
+#ax1.axhline((rho*Nstarp),color = 'magenta', linestyle = "-.",label = 'SN cutoff for P growth?')
+#ax1.axhline((rho*Nstarph),color = 'orange', linestyle = "-.",label = 'SN cutoff for P+H growth?')
+#ax1.axvline((vHline),color = 'c', linestyle = "-.",label = 'H cutoff?')
 
 ax1.set(xlabel='Supply hooh')
 ax1.set(ylabel='Supply nutrient')

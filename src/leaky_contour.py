@@ -30,29 +30,6 @@ ndays = 50
 mtimes = np.linspace(0,ndays,int(ndays/step))
 
 
-#parameters
-'''
-Qnp = 1#(9.4e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Pro from Bertilison 
-Qns = 1#(20.0e-15*(1/(14.0))*1e+9) 
-
-k1p =  200000     #Pro alpha
-k1s =  100000    #Syn alpha 
-k2p =  0.5    #Vmax     P
-k2s =  0.5  #Vmax     S  #0.300748361
-ksp = k2p/k1p
-kss = k2s/k1s
-dp = 0.002   #pro delta
-ds =  0.002   #syn delta
-kdam = 0.5   #hooh mediated damage rate of Pro  
-deltah = 0.002       #decay rate of HOOH via Syn 
-phi = 0.02    #0007  #detoxification-based decay of HOOH via Syn in this case
-rho =  0.002
-Sh = 0
-SN = 0
-params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh]
-
-#empty arrays to be populated by odeint when calling leak function
-'''
 P = np.array([])
 S  = np.array([])
 N = np.array([])
@@ -69,25 +46,6 @@ H0 = 1     #nM
 
 inits = (P0,S0,N0,H0)
 
-'''
-
-#####################################
-
-## ODE functions  to be solved with odeint 
-
-#####################################
-
-def leak(y,t,params):
-    ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh = params[0], params[1], params[2], params[3],params[4],  params[5], params[6], params[7],params[8],params[9], params[10],params[11]
-    P,S,N,H = y[0],y[1],y[2],y[3]
-    dPdt = (k2p * N /( (ksp) + N) )*P - (dp *P) - kdam*H*P
-    dSdt =(k2s * N /( (kss) + N))*S - (ds *S) #- kdams*H*S      
-    dNdt =  SN - ((k2p * N /( (ksp) + N) )*P* Qnp) - ((k2s * N /( (kss) + N))*S* Qns) - rho*N    
-    dHdt = Sh - deltah*H  -phi*S*H  #phi being S cell-specific detox rate
-    return [dPdt,dSdt,dNdt,dHdt]
-
-
-'''
 
 #####################################
 
@@ -99,6 +57,8 @@ Sh = 10
 SN = 100000
 params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh]
 
+#get equilibria with function 
+[Nstar, Pstar, Sstar, Hstar] = Coexist(params)[0,1,2,3]
 
 #run model 
 
@@ -110,33 +70,6 @@ Ps = competition[:,0]
 Ss = competition[:,1]
 Ns = competition[:,2]
 Hs = competition[:,3]
-
-##########################################################
-
-# Calculated analytical solutions at equilibrium
-
-##########################################################
-'''
-#Coexist
-Nstar = (kss*ds)/(k2s-ds)
-Hstar = (((k2p*Nstar)/(Nstar + ksp))-(dp))*(1/kdam)
-Sstar = (Sh - deltah*Hstar)/(phi*Hstar)
-Pstar = ((SN-rho*Nstar)*(Nstar + ksp))/(k2p*Nstar*Qnp)
-
-#Pwin 
-Nstarp = ((ksp*dp )+(ksp*kdam))/((k2p*Qnp) - dp - kdam)
-Pstarp = (SN - rho*Nstarp)*((Nstarp + ksp)/((k2p*Nstarp)*Qnp))
-Hstarp = Sh/(deltah+phi*Pstar)  #do we need toassume H must be 0 for P to win?????
-
-#Swin 
-Nstars = (ds*kss)/((k2s*Qns)-ds)
-Sstars = (SN - rho*Nstars)*(((Nstars + kss)/(k2s*Nstars*Qns)))
-Hstars = Sh/(deltah)
-
-
-Nstarph = ((ksp*dp )+(ksp*kdam*Hstar))/((k2p*Qnp) - dp - (kdam*Hstar))
-vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2p*Nstarp*Pstar*Qnp)+(dp*Pstar)))
-'''
 
 #graaph dynamics where P dominates 
 fig1, (ax1, ax2,ax3) = plt.subplots(3,1, sharex=True, figsize=(9,5),dpi = 300)
@@ -156,10 +89,7 @@ ax3.plot(mtimes, Hs,  linewidth = 3, color = 'red', label = "HOOH concentration 
 
 ax1.axhline(Sstar,color = 'orangered', linestyle = "-.",label = 'S*')
 ax1.axhline(Pstar,color = 'darkgreen', linestyle = ":",label = 'P*')
-ax2.axhline(Nstar,color = 'purple', linestyle = "-.",label = 'Nstar')
-
-ax2.axhline(Nstars,color = 'pink', linestyle = "-.",label = 'Ns*')
-ax2.axhline(Nstarp,color = 'magenta', linestyle = ":",label = 'Np*')
+ax2.axhline(Nstar,color = 'purple', linestyle = "-.",label = 'N*')
 ax3.axhline(Hstar,color = 'red', linestyle = "-.",label = 'H*')
 
 ax1.semilogy()
@@ -180,6 +110,8 @@ Sh = 100
 SN = 200
 params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh]
 
+#get equilibria with function 
+[Nstar, Pstar, Sstar, Hstar] = Coexist(params)[0,1,2,3]
 
 #run model 
 
@@ -192,31 +124,6 @@ Ss = competition[:,1]
 Ns = competition[:,2]
 Hs = competition[:,3]
 
-##########################################################
-
-# Calculated analytical solutions at equilibrium
-
-##########################################################
-
-#Coexist
-Nstar = (kss*ds)/(k2s-ds)
-Hstar = (((k2p*Nstar)/(Nstar + ksp))-(dp))*(1/kdam)
-Sstar = (Sh - deltah*Hstar)/(phi*Hstar)
-Pstar = ((SN-rho*Nstar)*(Nstar + ksp))/(k2p*Nstar*Qnp)
-
-#Pwin 
-Nstarp = ((ksp*dp )+(ksp*kdam))/((k2p*Qnp) - dp - kdam)
-Pstarp = (SN - rho*Nstarp)*((Nstarp + ksp)/((k2p*Nstarp)*Qnp))
-Hstarp = Sh/(deltah+phi*Pstar)  #do we need toassume H must be 0 for P to win?????
-
-#Swin 
-Nstars = (ds*kss)/((k2s*Qns)-ds)
-Sstars = (SN - rho*Nstars)*(((Nstars + kss)/(k2s*Nstars*Qns)))
-Hstars = Sh/(deltah)
-
-
-Nstarph = ((ksp*dp )+(ksp*kdam*Hstar))/((k2p*Qnp) - dp - (kdam*Hstar))
-vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2p*Nstarp*Pstar*Qnp)+(dp*Pstar)))
 
 
 #graaph dynamics where S dominates 
@@ -263,6 +170,8 @@ for (i,SN) in zip(range(SNs.shape[0]),SNs):
     for (j,Sh) in zip(range(Shs.shape[0]),Shs):
         params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho, SN, Sh]
         leaky  = odeint(leak, inits, mtimes, args = (params,))
+        #get equilibria with function 
+        [Nstar, Pstar, Sstar, Hstar] = Coexist(params)[0,1,2,3]
         Psc = leaky[:,0]
         Ssc = leaky[:,1]
         Nsc = leaky[:,2]
@@ -277,11 +186,6 @@ for (i,SN) in zip(range(SNs.shape[0]),SNs):
             Z[i,j] = 0
         if np.all([g <= 1e-3 for g in Psc[-200:]]) and np.all([h <= 1e-3 for h in Ssc[-200:]]) : 
             Z[i,j] = -1
-        Nstar = (kss*ds)/(k2s-ds)
-        Hstar = (((k2p*Nstar)/(Nstar + ksp))-(dp))*(1/kdam)
-        Sstar = (Sh - deltah*Hstar)/(phi*Hstar)
-        Pstar = ((SN-rho*Nstar)*(Nstar + ksp))/(k2p*Nstar*Qnp)
-    
 
 
 #######################################
@@ -296,9 +200,9 @@ ax1.set(xlabel='Supply HOOH')
 ax1.set(ylabel='Supply N')
 
 
-ax1.axhline((rho*Nstar),color = 'purple', linestyle = "-.",label = 'Nstar')
+#ax1.axhline((rho*Nstar),color = 'purple', linestyle = "-.",label = 'Nstar')
 #ax1.axvline((vHline),color = 'c', linestyle = "-.",label = 'H ')
-ax1.axvline((Hstar*(deltah+(phi*Pstar))),color = 'b', linestyle = "-.",label = 'H cutoff?')
+#ax1.axvline((Hstar*(deltah+(phi*Pstar))),color = 'b', linestyle = "-.",label = 'H cutoff?')
 
 fig3.colorbar(grid, cmap= 'summer',label = 'S / S+P')
 

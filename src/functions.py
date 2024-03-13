@@ -64,9 +64,9 @@ def Swins (params):
 
 def Coexist (params): 
     Nstar = (kss*ds)/(k2s-ds)
+    Pstar = ((SN-rho*Nstar)*(Nstar + ksp))/(k2p*Nstar*Qnp)
     Hstar = (((k2p*Nstar)/(Nstar + ksp))-(dp))*(1/kdam)
     Sstar = (Sh - deltah*Hstar)/(phi*Hstar)
-    Pstar = ((SN-rho*Nstar)*(Nstar + ksp))/(k2p*Nstar*Qnp)
     return  Nstar, Pstar, Sstar, Hstar 
 
 
@@ -77,8 +77,8 @@ def Coexist (params):
 
 #N threshold 
 
-Nstarph = ((ksp*dp )+(ksp*kdam*Hstar))/((k2p*Qnp) - dp - (kdam*Hstar))
+#Nstarph = ((ksp*dp )+(ksp*kdam*Hstar))/((k2p*Qnp) - dp - (kdam*Hstar))
 
 #h thresthold 
-vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2p*Nstarp*Pstar*Qnp)+(dp*Pstar)))
+#vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2p*Nstarp*Pstar*Qnp)+(dp*Pstar)))
 
