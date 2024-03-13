@@ -31,8 +31,6 @@ params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh]
 
 
 
-
-
 #functions for model 
 
 def leak(y,t,params):
@@ -53,42 +51,34 @@ def Pwins (params):
     Hstar = Sh/(deltah+phi*Pstar)  #do we need toassume H must be 0 for P to win?????
     return  Nstar, Pstar, Sstar, Hstar 
 
-'''
+
 
 def Swins (params): 
     Nstar = (ds*kss)/((k2s*Qns)-ds)
-    Sstar = (SN - rho*Nstar)*(((Nstars + kss)/(k2s*Nstar*Qns)))
+    Sstar = (SN - rho*Nstar)*(((Nstar + kss)/(k2s*Nstar*Qns)))
     Hstar = Sh/(deltah)
     Hstar = Sh/(deltah+phi*Pstar)  #do we need toassume H must be 0 for P to win?????
     return  Nstar, Pstar, Sstar, Hstar 
 
 
 
-h thresthold 
-N threshold 
+def Coexist (params): 
+    Nstar = (kss*ds)/(k2s-ds)
+    Hstar = (((k2p*Nstar)/(Nstar + ksp))-(dp))*(1/kdam)
+    Sstar = (Sh - deltah*Hstar)/(phi*Hstar)
+    Pstar = ((SN-rho*Nstar)*(Nstar + ksp))/(k2p*Nstar*Qnp)
+    return  Nstar, Pstar, Sstar, Hstar 
 
-##########################################################
 
-# Calculated analytical solutions at equilibrium
 
-##########################################################
 
-#Coexist
-Nstar = (kss*ds)/(k2s-ds)
-Hstar = (((k2p*Nstar)/(Nstar + ksp))-(dp))*(1/kdam)
-Sstar = (Sh - deltah*Hstar)/(phi*Hstar)
-Pstar = ((SN-rho*Nstar)*(Nstar + ksp))/(k2p*Nstar*Qnp)
 
-#Pwin 
 
-#Swin 
-Nstars = (ds*kss)/((k2s*Qns)-ds)
-Sstars = (SN - rho*Nstars)*(((Nstars + kss)/(k2s*Nstars*Qns)))
-Hstars = Sh/(deltah)
 
+#N threshold 
 
 Nstarph = ((ksp*dp )+(ksp*kdam*Hstar))/((k2p*Qnp) - dp - (kdam*Hstar))
+
+#h thresthold 
 vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2p*Nstarp*Pstar*Qnp)+(dp*Pstar)))
 
-read in to code for contour -_- 
-'''
