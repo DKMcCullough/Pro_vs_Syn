@@ -48,7 +48,7 @@ dp = 0.2   #pro delta
 ds =  0.2   #syn delta
 kdam = 0.025   #hooh mediated damage rate of Pro  
 deltah = 0.002       #decay rate of HOOH via Syn 
-phi = 1.10E-06    #0007  #detoxification-based decay of HOOH via Syn in this case
+phi = 0
 rho =  0.002
 
 
@@ -109,6 +109,7 @@ for (i,SN) in zip(range(SNs.shape[0]),SNs):
         if np.all([g <= 1e-3 for g in Psc[-200:]]) and np.all([h <= 1e-3 for h in Ssc[-200:]]) : 
             Z[i,j] = -1
         #if ratio > 0 and ratio < 1:
+            """
         #Coexist - make these the basae state and Pwin or Swin are special cases
         Nstar = (kss*ds)/(k2-ds)
         Hstar = (((k2*Nstar)/(Nstar + ksp))-(dp))*(1/kdam)
@@ -131,6 +132,8 @@ for (i,SN) in zip(range(SNs.shape[0]),SNs):
         Nstarph = ((ksp*dp )+(ksp*kdam*Hstar))/((k2*Qnp) - dp - (kdam*Hstar))
         vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2*Nstarp*Pstar*Qnp)+(dp*Pstar)))
         #elif Z[i,j] > 10:
+            """
+
             #print(i,j)
             #print(Ssc[-1],Psc[-1])
             #sys.exit()'''
@@ -175,7 +178,7 @@ ax3.semilogy()
 
 
 
-
+'''
 
 
 #fig.savefig('../figures/leaky_calcs_auto',dpi=300)
@@ -215,7 +218,7 @@ ax1.legend(loc = 'best')
 ax2.legend(loc = 'best')
 ax3.legend(loc = 'best')
 
-
+'''
 #######################################
 # Graphing Cotour plots from 
 ######################################
