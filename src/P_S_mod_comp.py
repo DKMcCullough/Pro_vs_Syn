@@ -37,7 +37,7 @@ from scipy.integrate import odeint
 step = 0.001
 ndays = 1000
 mtimes = np.linspace(0,ndays,int(ndays/step))
-SNs = np.linspace(0, 3000, num = 15)
+SNs = np.linspace(0, 300, num = 15)
 Shs = np.linspace(0, 3000, num =15)
 Z = np.zeros((int(SNs.shape[0]),int(Shs.shape[0])),float)
 

@@ -30,8 +30,8 @@ import sys
 step = 0.001
 ndays = 600
 mtimes = np.linspace(0,ndays,int(ndays/step))
-SNs = np.linspace(0, 1000, num = 20)
-Shs = np.linspace(0, 1000, num =20)
+SNs = np.linspace(0, 500, num = 20)
+Shs = np.linspace(0, 500, num =20)
 Z = np.zeros((int(SNs.shape[0]),int(Shs.shape[0])),float)
 
 
@@ -51,10 +51,6 @@ deltah = 0.002       #decay rate of HOOH via Syn
 phi = 1.10E-06    #0007  #detoxification-based decay of HOOH via Syn in this case
 rho =  0.002
 
-#params = [ksp,kss,k2,dp,ds,kdam,deltah,phi,rho]
-
-#phis([0.005,0.05,0.5])
-#kdams([])
 
 #empty arrays to be populated by odeint when calling leak function
 P = np.array([])
@@ -112,6 +108,28 @@ for (i,SN) in zip(range(SNs.shape[0]),SNs):
             Z[i,j] = 0
         if np.all([g <= 1e-3 for g in Psc[-200:]]) and np.all([h <= 1e-3 for h in Ssc[-200:]]) : 
             Z[i,j] = -1
+        #if ratio > 0 and ratio < 1:
+        #Coexist - make these the basae state and Pwin or Swin are special cases
+        Nstar = (kss*ds)/(k2-ds)
+        Hstar = (((k2*Nstar)/(Nstar + ksp))-(dp))*(1/kdam)
+        Sstar = (Sh - deltah*Hstar)/(phi*Hstar)
+        Pstar = ((SN-rho*Nstar)*(Nstar + ksp))/(k2*Nstar*Qnp)   
+        if ratio == 0:
+            #ratio at 0 Pro wins, or Sone wayyyyy smalller
+            #Pwin 
+            Nstarp = ((ksp*dp )+(ksp*kdam))/((k2*Qnp) - dp - kdam)
+            Pstarp = (SN - rho*Nstarp)*((Nstarp + ksp)/((k2*Nstarp)*Qnp))
+            Hstarp = Sh/(deltah+phi*Pstarp)  #do we need toassume H must be 0 for P to win?????
+        if ratio == 1:
+            #syn wins or aall dead
+        #Swin 
+            Nstars = (ds*kss)/((k2*Qns)-ds)
+            Sstars = (SN - rho*Nstars)*(((Nstars + kss)/(k2*Nstars*Qns)))
+            Hstars = Sh/(deltah)
+
+            
+        Nstarph = ((ksp*dp )+(ksp*kdam*Hstar))/((k2*Qnp) - dp - (kdam*Hstar))
+        vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2*Nstarp*Pstar*Qnp)+(dp*Pstar)))
         #elif Z[i,j] > 10:
             #print(i,j)
             #print(Ssc[-1],Psc[-1])
@@ -153,39 +171,9 @@ ax3.semilogy()
 
 
 
-#plt.show()
-
-'''
-##########################################################
-
-# Calculated analytical solutions at equilibrium
-
-##########################################################
-
-
-###### coesistance equilibrium (star equations ) ###########
-
-#Coexist
-Nstar = (kss*ds)/(k2-ds)
-Hstar = (((k2*Nstar)/(Nstar + ksp))-(dp))*(1/kdam)
-Sstar = (Sh - deltah*Hstar)/(phi*Hstar)
-Pstar = ((SN-rho*Nstar)*(Nstar + ksp))/(k2*Nstar*Qnp)
 
 
 
-#Pwin 
-Nstarp = ((ksp*dp )+(ksp*kdam))/((k2*Qnp) - dp - kdam)
-Pstarp = (SN - rho*Nstarp)*((Nstarp + ksp)/((k2*Nstarp)*Qnp))
-Hstarp = Sh/(deltah+phi*Pstar)  #do we need toassume H must be 0 for P to win?????
-
-#Swin 
-Nstars = (ds*kss)/((k2*Qns)-ds)
-Sstars = (SN - rho*Nstars)*(((Nstars + kss)/(k2*Nstars*Qns)))
-Hstars = Sh/(deltah)
-
-
-Nstarph = ((ksp*dp )+(ksp*kdam*Hstar))/((k2*Qnp) - dp - (kdam*Hstar))
-vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2*Nstarp*Pstar*Qnp)+(dp*Pstar)))
 
 
 
@@ -227,7 +215,7 @@ ax1.legend(loc = 'best')
 ax2.legend(loc = 'best')
 ax3.legend(loc = 'best')
 
-'''
+
 #######################################
 # Graphing Cotour plots from 
 ######################################
