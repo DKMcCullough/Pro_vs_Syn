@@ -18,7 +18,7 @@ get coexistance in range of H and N supply rates?
 
 
 
-
+from functions import * 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -32,12 +32,12 @@ import sys
 
 
 step = 0.001
-ndays = 600
+ndays = 50
 mtimes = np.linspace(0,ndays,int(ndays/step))
 
 
 #parameters
-
+'''
 Qnp = 1#(9.4e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Pro from Bertilison 
 Qns = 1#(20.0e-15*(1/(14.0))*1e+9) 
 
@@ -58,7 +58,7 @@ SN = 0
 params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh]
 
 #empty arrays to be populated by odeint when calling leak function
-
+'''
 P = np.array([])
 S  = np.array([])
 N = np.array([])
@@ -70,11 +70,12 @@ y = [P,S,N,H]
 
 P0 = 1e4
 S0 = 1e4
-N0 = 1.0e5        #nM 
+N0 = 1.0e1        #nM 
 H0 = 1     #nM
 
 inits = (P0,S0,N0,H0)
 
+'''
 
 #####################################
 
@@ -92,7 +93,7 @@ def leak(y,t,params):
     return [dPdt,dSdt,dNdt,dHdt]
 
 
-
+'''
 
 #####################################
 
@@ -101,7 +102,7 @@ def leak(y,t,params):
 #####################################
 #params for P to Win 
 Sh = 10
-SN = 200
+SN = 100000
 params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh]
 
 
@@ -121,7 +122,7 @@ Hs = competition[:,3]
 # Calculated analytical solutions at equilibrium
 
 ##########################################################
-
+'''
 #Coexist
 Nstar = (kss*ds)/(k2s-ds)
 Hstar = (((k2p*Nstar)/(Nstar + ksp))-(dp))*(1/kdam)
@@ -141,7 +142,7 @@ Hstars = Sh/(deltah)
 
 Nstarph = ((ksp*dp )+(ksp*kdam*Hstar))/((k2p*Qnp) - dp - (kdam*Hstar))
 vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2p*Nstarp*Pstar*Qnp)+(dp*Pstar)))
-
+'''
 
 #graaph dynamics where P dominates 
 fig1, (ax1, ax2,ax3) = plt.subplots(3,1, sharex=True, figsize=(9,5),dpi = 300)
@@ -171,7 +172,7 @@ ax1.semilogy()
 ax2.semilogy()
 ax3.semilogy()
 
-fig1.savefig('../figures/leaky_dyanmics_P',dpi=300)
+fig1.savefig('../figures/leaky_dynamics_P',dpi=300)
 plt.show()
 
 
@@ -252,10 +253,7 @@ ax1.semilogy()
 ax2.semilogy()
 ax3.semilogy()
 
-fig1.savefig('../figures/leaky_dyanmics_S',dpi=300)
-
-
-
+fig1.savefig('../figures/leaky_dynamics_S',dpi=300)
 
 
 ##############################

@@ -14,7 +14,7 @@ print out color of green (pro wins) or yellow (syn wins) along arrays of H and N
 
 
 """
-
+from functions import * 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,7 +26,11 @@ from scipy.integrate import odeint
 #####################
 # Set UP
 ######################
+#for nonleaky H detox
+phi = 0
 
+#for no H 
+#kdam = 0 
 
 step = 0.001
 ndays = 400 
@@ -35,30 +39,10 @@ mtimes = np.linspace(0,ndays,int(ndays/step))
 #initial values 
 P0 = 1e4
 S0 = 1e4
-N0 = 1e5        #nM 
+N0 = 1e1        #nM 
 H0 = 1    #nm
 inits = (P0,S0,N0,H0)
 
-
-
-#parameters
-Qnp = 1#(9.4e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Pro from Bertillison?  #giving N in micro units? 
-Qns = 1#(20.0e-15*(1/(14.0))*1e+9)
-
-
-k1p =  0.00002     #Pro alpha
-k1s =  0.00001      #Syn alpha 
-k2 =  0.88    #Vmax    shared for P and S here
-ksp = k2/k1p
-kss = k2/k1s
-dp = 0.2   #pro delta
-ds =  0.2   #syn delta
-kdam = 0.005   #hooh mediated damage rate of Pro 
-deltah = 0.2       #decay rate of HOOH via Syn 
-rho =  0.002                  #innate N loss from system 
-Sh = 0
-SN = 0
-params = [ksp,kss,k2,dp,ds,kdam,deltah,rho,SN,Sh]
 
 #empty arrays 
 P = np.array([])
@@ -70,34 +54,20 @@ y = [P,S,N,H]
 
 #function set up for ode int
 
-
-def nleak(y,t,params):
-    ksp,kss,k2,dp,ds,kdam,deltah,rho,SN,Sh= params[0], params[1], params[2],params[3],params[4], params[5],params[6],params[7],params[8],params[9]
-    P,S,N,H = y[0],y[1],y[2],y[3]
-    dPdt = (k2 * N /( (ksp) + N) )*P - (dp *P) - kdam*H*P
-    dSdt = (k2 * N /( (kss) + N) )*S - (ds *S) 
-    dNdt = SN - ((k2 * N /( (ksp) + N) )* P * Qnp) - ((k2 * N /( (kss) + N) ) * S * Qns)-rho*N
-    dHdt = Sh - deltah*H
-    return [dPdt,dSdt,dNdt,dHdt]
-
-
-
-
-
 ##############################
 #  P wining Dynamics 
 ##############################
 
 
 #params for P to Win 
-Sh = 50
-SN = 300
-params = [ksp,kss,k2,dp,ds,kdam,deltah,rho,SN,Sh]
+Sh = 0
+SN = 1e4
+params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh]
 
 
 #run model 
 
-competition  = odeint(nleak, inits, mtimes, args = (params,))
+competition  = odeint(leak, inits, mtimes, args = (params,))
 
 #grab values to graph 
 Ps = competition[:,0]
@@ -111,14 +81,13 @@ Hs = competition[:,3]
 
 ##########################################################
 
-
+'''
 ##### S wins #########
 
 Nstars = (ds*kss)/((k2*Qns)-ds)
 
 #Hstar = Sh/deltah
 Sstar = (SN - rho*Nstars)*(((Nstars + kss)/(k2*Nstars*Qns)))
-
 
 ##### P wins #########
 Nstarp = ((ksp*dp )+(ksp*kdam))/((k2*Qnp) - dp - kdam)
@@ -129,7 +98,7 @@ Pstar = (SN - rho*Nstarp)*((Nstarp + ksp)/((k2*Nstarp)*Qnp))
 
 Nstarph = ((ksp*dp )+(ksp*kdam*Hstar))/((k2*Qnp) - dp - (kdam*Hstar))
 vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2*Nstarp*Pstar*Qnp)+(dp*Pstar)))
-
+'''
 #graph for P winning 
 
 fig1, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True, figsize=(12,8),dpi = 300)
@@ -144,13 +113,13 @@ ax1.plot(mtimes, Ps , linewidth = 3, color = 'g', label = 'Pro')#' k1 =' + str(k
 ax1.plot(mtimes, Ss, linewidth = 3, color = 'orange', label = 'Syn')#' k1 =' + str(k1s))
 ax2.plot(mtimes, Ns,linewidth = 3, color = 'purple', label = "Nutrient")
 ax3.plot(mtimes, Hs,linewidth = 3, color = 'red', label = "HOOH")
-
+'''
 ax1.axhline(Sstar,color = 'orange', linestyle = "-.",label = 'S*')
 ax1.axhline(Pstar,color = 'g', linestyle = "-.",label = 'P*')
 ax2.axhline(Nstars,color = 'purple', linestyle = "-.",label = 'N*s')
 ax2.axhline(Nstarp,color = 'magenta', linestyle = "-.",label = 'N*p')
 ax3.axhline(Hstar,color = 'red', linestyle = "-.",label = 'H*')
-
+'''
 ax1.semilogy()
 ax2.semilogy()
 ax3.semilogy()
@@ -163,7 +132,7 @@ ax3.legend(loc = 'best')
 plt.show()
 
 
-fig1.savefig('../figures/no_leak_dyanmics_Pwins',dpi=300)
+fig1.savefig('../figures/no_leak_dynamics_Pwins',dpi=300)
 plt.show()
 
 
@@ -173,14 +142,14 @@ plt.show()
 ##############################
 
 #params for S to Win 
-Sh = 300
-SN = 300
-params = [ksp,kss,k2,dp,ds,kdam,deltah,rho,SN,Sh]
+Sh = 250
+SN = 1e4
+params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh]
 
 
 #run model 
 
-competition  = odeint(nleak, inits, mtimes, args = (params,))
+competition  = odeint(leak, inits, mtimes, args = (params,))
 
 #grab values to graph 
 Ps = competition[:,0]
@@ -195,23 +164,6 @@ Hs = competition[:,3]
 ##########################################################
 
 
-##### S wins #########
-
-Nstars = (ds*kss)/((k2*Qns)-ds)
-
-#Hstar = Sh/deltah
-Sstar = (SN - rho*Nstars)*(((Nstars + kss)/(k2*Nstars*Qns)))
-
-
-##### P wins #########
-Nstarp = ((ksp*dp )+(ksp*kdam))/((k2*Qnp) - dp - kdam)
-
-Hstar = Sh/deltah
-
-Pstar = (SN - rho*Nstarp)*((Nstarp + ksp)/((k2*Nstarp)*Qnp))
-
-Nstarph = ((ksp*dp )+(ksp*kdam*Hstar))/((k2*Qnp) - dp - (kdam*Hstar))
-vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2*Nstarp*Pstar*Qnp)+(dp*Pstar)))
 
 #graph for S winning 
 
@@ -226,13 +178,13 @@ ax1.plot(mtimes, Ps , linewidth = 3, color = 'g', label = 'Pro')#' k1 =' + str(k
 ax1.plot(mtimes, Ss, linewidth = 3, color = 'orange', label = 'Syn')#' k1 =' + str(k1s))
 ax2.plot(mtimes, Ns,linewidth = 3, color = 'purple', label = "Nutrient")
 ax3.plot(mtimes, Hs,linewidth = 3, color = 'red', label = "HOOH")
-
+'''
 ax1.axhline(Sstar,color = 'orange', linestyle = "-.",label = 'S*')
 ax1.axhline(Pstar,color = 'g', linestyle = "-.",label = 'P*')
 ax2.axhline(Nstars,color = 'purple', linestyle = "-.",label = 'N*s')
 ax2.axhline(Nstarp,color = 'magenta', linestyle = "-.",label = 'N*p')
 ax3.axhline(Hstar,color = 'red', linestyle = "-.",label = 'H*')
-
+'''
 ax1.semilogy()
 ax2.semilogy()
 ax3.semilogy()
@@ -244,7 +196,7 @@ ax3.legend(loc = 'best')
 
 plt.show()
 
-fig2.savefig('../figures/no_leak_dyanmics_Swins',dpi=300)
+fig2.savefig('../figures/no_leak_dynamics_Swins',dpi=300)
 
 
 ##############################
@@ -254,15 +206,15 @@ fig2.savefig('../figures/no_leak_dyanmics_Swins',dpi=300)
 ##############################
 
 
-Shs = np.linspace(0, 500, num = 10)
-SNs = np.linspace(0, 500, num = 10)
+Shs = np.linspace(0,10000, num = 10)
+SNs = np.linspace(0, 500000, num = 10)
 Z = np.zeros((int(SNs.shape[0]),int(Shs.shape[0])),float)
 
 
 for (i,SN) in zip(range(SNs.shape[0]),SNs):
     for (j,Sh) in zip(range(Shs.shape[0]),Shs):
-        params = [ksp,kss,k2,dp,ds,kdam,deltah,rho, SN, Sh]
-        nonleaky  = odeint(nleak, inits, mtimes, args = (params,))
+        params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh]
+        nonleaky  = odeint(leak, inits, mtimes, args = (params,))
         Psc = nonleaky[:,0]
         Ssc = nonleaky[:,1]
         Nsc = nonleaky[:,2]
