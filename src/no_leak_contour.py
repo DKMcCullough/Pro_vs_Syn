@@ -45,8 +45,7 @@ inits = (P0,S0,N0,H0)
 Qnp = 1#(9.4e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Pro from Bertillison?  #giving N in micro units? 
 Qns = 1#(20.0e-15*(1/(14.0))*1e+9)
 
-Sh = 300
-SN = 300
+
 k1p =  0.00002     #Pro alpha
 k1s =  0.00001      #Syn alpha 
 k2 =  0.88    #Vmax    shared for P and S here
@@ -57,7 +56,8 @@ ds =  0.2   #syn delta
 kdam = 0.005   #hooh mediated damage rate of Pro 
 deltah = 0.2       #decay rate of HOOH via Syn 
 rho =  0.002                  #innate N loss from system 
-
+Sh = 0
+SN = 0
 params = [ksp,kss,k2,dp,ds,kdam,deltah,rho,SN,Sh]
 
 #empty arrays 
@@ -108,50 +108,33 @@ Nstarph = ((ksp*dp )+(ksp*kdam*Hstar))/((k2*Qnp) - dp - (kdam*Hstar))
 vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2*Nstarp*Pstar*Qnp)+(dp*Pstar)))
 
 
+##############################
+#  P wining Dynamics 
+##############################
 
-#####################################
-#creating and slicing dyanmics 
-#####################################
 
+#params for P to Win 
+Sh = 0
+SN = 200
+params = [ksp,kss,k2,dp,ds,kdam,deltah,rho,SN,Sh]
+
+
+#run model 
 
 competition  = odeint(nleak, inits, mtimes, args = (params,))
 
-#redefine where P and N are in returned matrix from ode int
+#grab values to graph 
 Ps = competition[:,0]
 Ss = competition[:,1]
 Ns = competition[:,2]
 Hs = competition[:,3]
 
-#####################################
 
-#  Graphing dyanmics
-
-#####################################
+#graph for P winning 
 
 fig1, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True, figsize=(12,8),dpi = 300)
-fig1.suptitle('Non_leaky HOOH')
 
-
-ax1.set(ylabel='cells per ml')
-ax2.set(ylabel='Nutrient per ml')
-ax3.set(xlabel='Time (days)', ylabel='HOOH per ml')
-
-
-ax1.plot(mtimes, Ps , linewidth = 3, color = 'g', label = 'Pro')#' k1 =' + str(k1p))
-ax1.plot(mtimes, Ss, linewidth = 3, color = 'orange', label = 'Syn')#' k1 =' + str(k1s))
-ax2.plot(mtimes, Ns,linewidth = 3, color = 'purple', label = "Nutrient")
-ax3.plot(mtimes, Hs,linewidth = 3, color = 'red', label = "HOOH")
-
-ax1.semilogy()
-ax2.semilogy()
-ax3.semilogy()
-
-fig1.savefig('../figures/no_leak_dyanmics',dpi=300)
-plt.show()
-
-#  graphing equilibrium values onto dyanmics 
-fig2, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True, figsize=(12,8),dpi = 300)
-fig2.suptitle('Non_leaky HOOH Equilibria')
+fig1.suptitle('Non_leaky HOOH in Sh '+str(Sh))
 
 ax1.set(ylabel='Cells per ml')
 ax2.set(ylabel='Nutrient per ml')
@@ -179,7 +162,65 @@ ax3.legend(loc = 'best')
 
 plt.show()
 
-fig2.savefig('../figures/no_leak_equilibria',dpi=300)
+
+fig1.savefig('../figures/no_leak_dyanmics_Pwins',dpi=300)
+plt.show()
+
+
+
+##############################
+#  S wining Dynamics 
+##############################
+
+#params for S to Win 
+Sh = 10
+SN = 200
+params = [ksp,kss,k2,dp,ds,kdam,deltah,rho,SN,Sh]
+
+
+#run model 
+
+competition  = odeint(nleak, inits, mtimes, args = (params,))
+
+#grab values to graph 
+Ps = competition[:,0]
+Ss = competition[:,1]
+Ns = competition[:,2]
+Hs = competition[:,3]
+
+
+#graph for S winning 
+
+fig2, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True, figsize=(12,8),dpi = 300)
+fig2.suptitle('Non_leaky HOOH in Sh '+str(Sh))
+
+ax1.set(ylabel='Cells per ml')
+ax2.set(ylabel='Nutrient per ml')
+ax3.set(xlabel='Time (days)', ylabel='HOOH per ml')
+
+ax1.plot(mtimes, Ps , linewidth = 3, color = 'g', label = 'Pro')#' k1 =' + str(k1p))
+ax1.plot(mtimes, Ss, linewidth = 3, color = 'orange', label = 'Syn')#' k1 =' + str(k1s))
+ax2.plot(mtimes, Ns,linewidth = 3, color = 'purple', label = "Nutrient")
+ax3.plot(mtimes, Hs,linewidth = 3, color = 'red', label = "HOOH")
+
+ax1.axhline(Sstar,color = 'orange', linestyle = "-.",label = 'S*')
+ax1.axhline(Pstar,color = 'g', linestyle = "-.",label = 'P*')
+ax2.axhline(Nstars,color = 'purple', linestyle = "-.",label = 'N*s')
+ax2.axhline(Nstarp,color = 'magenta', linestyle = "-.",label = 'N*p')
+ax3.axhline(Hstar,color = 'red', linestyle = "-.",label = 'H*')
+
+ax1.semilogy()
+ax2.semilogy()
+ax3.semilogy()
+
+ax1.legend(loc = 'best')
+ax2.legend(loc = 'best')
+ax3.legend(loc = 'best')
+
+
+plt.show()
+
+fig2.savefig('../figures/no_leak_dyanmics_Swins',dpi=300)
 
 
 ##############################
