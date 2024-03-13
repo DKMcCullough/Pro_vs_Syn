@@ -40,8 +40,7 @@ mtimes = np.linspace(0,ndays,int(ndays/step))
 
 Qnp = 1#(9.4e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Pro from Bertilison 
 Qns = 1#(20.0e-15*(1/(14.0))*1e+9) 
-Sh = 300
-SN = 300
+
 k1p =  200000     #Pro alpha
 k1s =  100000    #Syn alpha 
 k2p =  0.5    #Vmax     P
@@ -54,7 +53,8 @@ kdam = 0.5   #hooh mediated damage rate of Pro
 deltah = 0.002       #decay rate of HOOH via Syn 
 phi = 0.02    #0007  #detoxification-based decay of HOOH via Syn in this case
 rho =  0.002
-
+Sh = 0
+SN = 0
 params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh]
 
 #empty arrays to be populated by odeint when calling leak function
