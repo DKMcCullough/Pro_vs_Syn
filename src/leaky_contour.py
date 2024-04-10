@@ -12,7 +12,7 @@ location: /Users/dkm/Documents/Talmy_research/Zinser_lab/Projects/Competitions/P
 
 
 
-from functions import * 
+from functions_chap3 import * 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,7 +26,7 @@ import sys
 
 
 step = 0.001
-ndays = 50
+ndays = 200
 mtimes = np.linspace(0,ndays,int(ndays/step))
 
 
@@ -41,7 +41,7 @@ y = [P,S,N,H]
 
 P0 = 1e4
 S0 = 1e4
-N0 = 1.0e1        #nM 
+N0 = 1.0e5        #nM 
 H0 = 1     #nM
 
 inits = (P0,S0,N0,H0)
@@ -53,12 +53,13 @@ inits = (P0,S0,N0,H0)
 
 #####################################
 #params for P to Win 
-Sh = 10
-SN = 100000
-params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh]
+Sh = 0
+SN  = 1e5
+
+params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh,B,phib]
 
 #get equilibria with function 
-[Nstar, Pstar, Sstar, Hstar] = Coexist(params)[0,1,2,3]
+Nstar, Pstar, Sstar, Hstar = Pwins(params)
 
 #run model 
 
@@ -72,9 +73,9 @@ Ns = competition[:,2]
 Hs = competition[:,3]
 
 #graaph dynamics where P dominates 
-fig1, (ax1, ax2,ax3) = plt.subplots(3,1, sharex=True, figsize=(9,5),dpi = 300)
+fig1, (ax1, ax2,ax3) = plt.subplots(3,1, sharex=True, figsize=(8,7),dpi = 300)
 fig1.suptitle('Growth Competition Projections in Sn'+ str(SN)+' Sh '+str(Sh))
-plt.subplots_adjust(wspace = 0.5, top = 0.9,bottom = 0.1)
+plt.subplots_adjust(right=0.95, wspace = 0.35, left = 0.10, hspace = 0.15, bottom = 0.15)
 ax1.set(xlabel='Time (days)', ylabel='cells per ml')
 ax2.set(xlabel='Time (days)', ylabel='Nutrient [ ]')
 ax3.set(xlabel='Time (days)', ylabel='HOOH [ ]')
@@ -96,6 +97,7 @@ ax1.semilogy()
 ax2.semilogy()
 ax3.semilogy()
 
+
 fig1.savefig('../figures/leaky_dynamics_P',dpi=300)
 plt.show()
 
@@ -106,12 +108,12 @@ plt.show()
 
 #####################################
 #params for S to Win 
-Sh = 100
-SN = 200
-params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh]
+Sh = 2000
+SN  = 1e5
+params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh,B,phib]
 
 #get equilibria with function 
-[Nstar, Pstar, Sstar, Hstar] = Coexist(params)[0,1,2,3]
+Nstar, Pstar, Sstar, Hstar = Swins(params)
 
 #run model 
 
@@ -127,9 +129,9 @@ Hs = competition[:,3]
 
 
 #graaph dynamics where S dominates 
-fig1, (ax1, ax2,ax3) = plt.subplots(3,1, sharex=True, figsize=(9,5),dpi = 300)
-fig1.suptitle('Growth Competition Projections in Sn'+ str(SN)+' Sh '+str(Sh))
-plt.subplots_adjust(wspace = 0.5, top = 0.9,bottom = 0.1)
+fig1, (ax1, ax2,ax3) = plt.subplots(3,1, sharex=True, figsize=(8,7),dpi = 300)
+fig1.suptitle('Growth Competition Projections in SN '+ str(SN)+' Sh '+str(Sh))
+plt.subplots_adjust(right=0.95, wspace = 0.35, left = 0.10, hspace = 0.15, bottom = 0.15)
 ax1.set(xlabel='Time (days)', ylabel='cells per ml')
 ax2.set(xlabel='Time (days)', ylabel='Nutrient [ ]')
 ax3.set(xlabel='Time (days)', ylabel='HOOH [ ]')
@@ -146,13 +148,14 @@ ax1.axhline(Sstar,color = 'orangered', linestyle = "-.",label = 'S*')
 ax1.axhline(Pstar,color = 'darkgreen', linestyle = ":",label = 'P*')
 ax2.axhline(Nstar,color = 'purple', linestyle = "-.",label = 'Nstar')
 
-ax2.axhline(Nstars,color = 'pink', linestyle = "-.",label = 'Ns*')
-ax2.axhline(Nstarp,color = 'magenta', linestyle = ":",label = 'Np*')
+#ax2.axhline(Nstars,color = 'pink', linestyle = "-.",label = 'Ns*')
+#ax2.axhline(Nstarp,color = 'magenta', linestyle = ":",label = 'Np*')
 ax3.axhline(Hstar,color = 'red', linestyle = "-.",label = 'H*')
 
 ax1.semilogy()
 ax2.semilogy()
 ax3.semilogy()
+
 
 fig1.savefig('../figures/leaky_dynamics_S',dpi=300)
 
@@ -162,16 +165,16 @@ fig1.savefig('../figures/leaky_dynamics_S',dpi=300)
 ##############################
 
 
-SNs = np.linspace(0, 500, num = 140)
-Shs = np.linspace(0, 1000, num = 40)
+SNs = np.linspace(10e4, 10e6, num = 40)
+Shs = np.linspace(0, 2500, num = 40)
 Z = np.zeros((int(SNs.shape[0]),int(Shs.shape[0])),float)
 
 for (i,SN) in zip(range(SNs.shape[0]),SNs):
     for (j,Sh) in zip(range(Shs.shape[0]),Shs):
-        params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho, SN, Sh]
+        params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh,B,phib]
         leaky  = odeint(leak, inits, mtimes, args = (params,))
         #get equilibria with function 
-        [Nstar, Pstar, Sstar, Hstar] = Coexist(params)[0,1,2,3]
+        Nstar, Pstar, Sstar, Hstar = Coexist(params)
         Psc = leaky[:,0]
         Ssc = leaky[:,1]
         Nsc = leaky[:,2]
@@ -207,6 +210,68 @@ ax1.set(ylabel='Supply N')
 fig3.colorbar(grid, cmap= 'summer',label = 'S / S+P')
 
 fig3.savefig('../figures/leaky_contour',dpi=300)
+
+
+
+
+#####################################
+
+#  dynamics for coexistance (gotten from contour) 
+
+#####################################
+#params for S to Win 
+Sh = 1200
+SN = 1e6
+params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh,B,phib]
+
+#get equilibria with function 
+Nstar, Pstar, Sstar, Hstar = Coexist(params)
+
+#run model 
+
+competition  = odeint(leak, inits, mtimes, args = (params,))
+
+
+#grab values to graph 
+Ps = competition[:,0]
+Ss = competition[:,1]
+Ns = competition[:,2]
+Hs = competition[:,3]
+
+
+
+#graaph dynamics where S dominates 
+fig1, (ax1, ax2,ax3) = plt.subplots(3,1, sharex=True, figsize=(8,7),dpi = 300)
+fig1.suptitle('Growth Competition Projections in SN '+ str(SN)+' Sh '+str(Sh))
+plt.subplots_adjust(right=0.95, wspace = 0.35, left = 0.10, hspace = 0.15, bottom = 0.15)
+ax1.set(xlabel='Time (days)', ylabel='cells per ml')
+ax2.set(xlabel='Time (days)', ylabel='Nutrient [ ]')
+ax3.set(xlabel='Time (days)', ylabel='HOOH [ ]')
+
+
+ax1.plot(mtimes, Ps , linewidth = 3, color = 'g', label = 'Pro ') #'k1 =' + str(k1p))
+ax1.plot(mtimes, Ss , linewidth = 3, color = 'orange', label = 'Syn ') #'k1 =' + str(k1s))
+ax2.plot(mtimes, Ns, linewidth = 3, color = 'purple', label = "Nutrient Concentration ")
+ax3.plot(mtimes, Hs,  linewidth = 3, color = 'red', label = "HOOH concentration ")
+
+##### graphing stars equations ############### 
+
+ax1.axhline(Sstar,color = 'orangered', linestyle = "-.",label = 'S*')
+ax1.axhline(Pstar,color = 'darkgreen', linestyle = ":",label = 'P*')
+ax2.axhline(Nstar,color = 'purple', linestyle = "-.",label = 'Nstar')
+
+#ax2.axhline(Nstars,color = 'pink', linestyle = "-.",label = 'Ns*')
+#ax2.axhline(Nstarp,color = 'magenta', linestyle = ":",label = 'Np*')
+ax3.axhline(Hstar,color = 'red', linestyle = "-.",label = 'H*')
+
+ax1.semilogy()
+ax2.semilogy()
+ax3.semilogy()
+
+fig1.savefig('../figures/leaky_dynamics_coexist',dpi=300)
+
+
+
 
 print('') 
 

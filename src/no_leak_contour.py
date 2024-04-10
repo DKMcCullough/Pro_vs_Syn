@@ -11,8 +11,7 @@ Goal:
 
 
 """
-
-from functions import * 
+from functions_chap3 import * 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -32,7 +31,7 @@ phi = 0
 #kdam = 0 
 
 step = 0.001
-ndays = 400 
+ndays = 100 
 mtimes = np.linspace(0,ndays,int(ndays/step))
 
 #initial values 
@@ -64,7 +63,7 @@ SN = 1e4
 params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh]
 
 #get equilibria
-[Nstar, Pstar, Sstar, Hstar] = Pwins(params) #use function from other file to get equilibria
+Nstar, Pstar, Sstar, Hstar = Pwins(params) #use function from other file to get equilibria
 
 #run model 
 
@@ -129,7 +128,7 @@ Sh = 250
 SN = 1e4
 params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh]
 
-[Nstar, Pstar, Sstar, Hstar] = Swins(params)
+Nstar, Pstar, Sstar, Hstar = Swins(params)
 #run model 
 
 
