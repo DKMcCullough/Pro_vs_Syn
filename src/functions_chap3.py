@@ -8,10 +8,6 @@ Created on Wed Mar 13 13:57:23 2024
 
 #Base parameter set  (leaky or no H are special cases) 
 
-
-Qnp = 1#(9.4e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Pro from Bertilison 
-Qns = 1#(20.0e-15*(1/(14.0))*1e+9) 
-
 k1p =  0.02     #Pro alpha
 k1s =  0.01    #Syn alpha 
 k2p =  0.5    #Vmax     P
@@ -20,17 +16,20 @@ ksp = k2p/k1p
 kss = k2s/k1s
 dp = 0.2   #pro delta
 ds =  0.2   #syn delta
-kdam = 0.005   #hooh mediated damage rate of Pro  
-deltah = 0.002       #decay rate of HOOH via Syn 
+kdam = 0.005555   #hooh mediated damage rate of Pro  
+deltaH = 0.002       #decay rate of HOOH via Syn 
 phi = 1.7e-6    #0007  #detoxification-based decay of HOOH via Syn in this case
 rho =  0.002
-Sh = 0
-SN = 10000
+Sh = 400
+SN = 8000
+Qnp = 1#(9.4e-15*(1/(14.0))*1e+9)  #Nitrogen Quota for Pro from Bertilison 
+Qns = 1#(20.0e-15*(1/(14.0))*1e+9) 
 
-B = 1e5
-phib = 0.0004
+B = 1e5   #this is ALLL bacteria, including EZ55 #EZ55 at 5e+3 can save bc of higher phi (0.0096 - DT's functions)
+phib = 0.00004   #from Emily Landlot data and DT calcs
+deltah = (deltaH + B*phib)
 
-params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh,B,phib]
+params = [k1p,k1s,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh]
 
 ##############
 #make param for heterotroph detox value and heterotroph to be unchanging with current N and also to be callable into leaky function
@@ -39,12 +38,14 @@ params = [ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh,B,phib]
 #functions for model 
 
 def leak(y,t,params):
-    ksp,kss,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh,B,phib = params[0], params[1], params[2], params[3],params[4],  params[5], params[6], params[7],params[8],params[9], params[10],params[11], params[12], params[13]
+    k1p,k1s,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh = params[0], params[1], params[2], params[3],params[4],  params[5], params[6], params[7],params[8],params[9], params[10],params[11]
+    ksp = k2p/k1p
+    kss = k2s/k1s
     P,S,N,H = y[0],y[1],y[2],y[3]
     dPdt = (k2p * N /( (ksp) + N) )*P - (dp *P) - kdam*H*P
-    dSdt =(k2s * N /( (kss) + N))*S - (ds *S) #- kdams*H*S      
+    dSdt =(k2s * N /( (kss) + N))*S - (ds *S)      
     dNdt =  SN - ((k2p * N /( (ksp) + N) )*P* Qnp) - ((k2s * N /( (kss) + N))*S* Qns) - rho*N    
-    dHdt = Sh - deltah*H  - phi*S*H  - (phib)*(B)*(H) #phi being S cell-specific detox rate
+    dHdt = Sh - deltah*H  - phi*S*H  
     return [dPdt,dSdt,dNdt,dHdt]
 
 #0.0004   from EZ55 calculcations from E.L. 
@@ -60,47 +61,49 @@ def death_all(params):
     Nstar = SN/(rho)
     Pstar = 0
     Sstar = 0
-    Hstar = Sh/(deltah + ((B)*(phib)))
+    Hstar = Sh/(deltah )
     return  Nstar, Pstar, Sstar, Hstar 
 
 
 
 def Pwins (params): 
-    Nstar = - (((k2p*(Sh*kdam + dp*(deltah+((B)*(phib))))/(k1p*(Sh*kdam + dp*(deltah*((B)*(phib)))-k2p*(deltah*(B)*(phib)))))))
-    Pstar = (((deltah+(((B)*(phib)))*(rho*k2p*(Sh*kdam))+SN*k1p*(Sh*kdam +dp*(Sh + (B)*(phib) ) - k2p*(Sh + (B)*(phib))))/(k1p*(Sh*kdam + dp*(Sh + (B)*(phib)))*(Sh*kdam + dp*(Sh + (B)*(phib) ) - k2p*(Sh + (B)*(phib))))))
+    k1p,k1s,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh = params[0], params[1], params[2], params[3],params[4],  params[5], params[6], params[7],params[8],params[9], params[10],params[11]
+    #print(params)
+    ksp = k2p/k1p
+    kss = k2s/k1s
+    Hstar = Sh/deltah
+    Nstar =  ((ds +kdam*Hstar)*ksp)/(k2p - ((ds+kdam*Hstar)))
+    Pstar = ((SN-rho*Nstar)*(Nstar+(ksp))) / (k2p*Nstar)
     Sstar = 0
-    Hstar = Sh/(deltah+(B)*(phib))  #do we need toassume H must be 0 for P to win?????
+   #do we need toassume H must be 0 for P to win?????
     return  Nstar, Pstar, Sstar, Hstar 
 
 
 
 
 def Swins (params): 
+    k1p,k1s,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh = params[0], params[1], params[2], params[3],params[4],  params[5], params[6], params[7],params[8],params[9], params[10],params[11]
+    #print(params)
     Nstar = - (ds*k2s)/(k1s*(ds-k2s))
     Pstar = 0
-    Hstar = ((Sh*k2s)*((ds*k2s)+((k1s)*k1s))*(-ds + k2s))/((-rho*k1s*ds*k1s*phi)+ ds*((k2s)*k2s)*(deltah+ (B*phib))*((SN*phi)+ (k2s)*(deltah+ (B*phib)) ))
-    Sstar = -(k1s*(SN*k1s*(ds-k2s)+rho*ds*k1s))/(k2s*((ds*k2s)+((k1s)*(k1s)))*(-ds + k2s))
+    Hstar = Sh/(deltah)
+    Sstar = ((SN-rho*Nstar)*(Nstar+(k2s/k1s))) / (k2s*Nstar)
     return  Nstar, Pstar, Sstar, Hstar 
 
 
 
 def Coexist (params): 
-    Nstar = - (ds*k2s)/(k1s*(ds-k2s))
-    
-    Pstar = ((k1s*k2p*(ds-k2s) - (k1p*ds*k2s)*(k1p*ds*ds*k2s*k2s*k2s)*(Sh*kdam + dp*(deltah + (B*phib))- k1p*(deltah + (B*phib)))) + (k1s*k1s*k1s*k2p*((ds-k2s)*(ds-k2s))*(Sh*kdam*k2s + dp*(SN*phi + k2s*(deltah + B*phib))) + k1s*ds*k2s*k2s*(k2p*(Sh*kdam*k2p + ds*(-Sh*kdam + rho*k1p*phi)))) \
-             - dp*(k2p*k2s*((deltah + (B*phib)))) + ds*((rho*k1p*phi + (k2p*(deltah + B*phib)))) - (k1s*k1s*ds*(ds - k2s)*k2s*((-rho*dp*k2p*phi)+(k1p*(Sh*kdam*k2p + dp*(SN*phi + k2s*(deltah*(B*phib))))) -  k2p*(SN*phi + k2s*(deltah + (B*phib))) ) / ((k1p*k1s*k1s*ds*k2p*k2s*(-ds+k2s)*(k1s*dp*k1p*(ds-k2s)+k1p*ds*(-dp+k2p))*k2s)*phi)))
-    Hstar = ((k1p*dp*(dp-k2p)*k2s) + (k1s*dp*k1p)*(-dp+k2p) )/((kdam*(k1s*k2p*(dp-k1p) - k1p*ds*k2s)))
-    Sstar = -(k1s*k1p*(ds-k2s)*(Sh*kdam + dp*(deltah + (B*phib)))) + (k1p*ds*k1s*(Sh*kdam + dp*(deltah + (B*phib)) - k2p*(deltah + (B*phib))))
+    k1p,k1s,k2p,k2s,dp,ds,kdam,deltah,phi,rho,SN,Sh = params[0], params[1], params[2], params[3],params[4],  params[5], params[6], params[7],params[8],params[9], params[10],params[11]
+   # print(params)
+    ksp = k2p/k1p
+    kss = k2s/k1s
+    a1 = k1p*ds*(dp-k2p)*k2p 
+    a2  = k1s*dp*k2p*(-1*(ds)+k2s)
+    a3 = kdam*(k1s*k2p*(ds-k2s)-k1p*ds*k2s)
+    Hstar = ((a1+a2)/a3)
+    Nstar =  - (ds*k2s)/(k1s*(ds-k2s))
+    Sstar = (Sh - deltah*Hstar) /( phi*Hstar)
+    Pstar = ((SN - ((k2s*Nstar)/(Nstar + (kss)))*Sstar  - rho*Nstar)  /((k2p*Nstar)/ ((Nstar +( ksp)))))
+
     return  Nstar, Pstar, Sstar, Hstar 
-
-
-def StarContour(Nstar, Pstar, Sstar, Hstar):
-    #
-    return
-#N threshold 
-
-#Nstarph = ((ksp*dp )+(ksp*kdam*Hstar))/((k2p*Qnp) - dp - (kdam*Hstar))
-
-#h thresthold 
-#vHline = ((deltah)/(Pstar*kdam)*((Nstarp+ksp)/(k2p*Nstarp*Pstar*Qnp)+(dp*Pstar)))
 
